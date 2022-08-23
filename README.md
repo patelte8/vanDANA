@@ -6,7 +6,7 @@ vanDANA is a high-performance FEM based Flow-thermal CFD solver utilizing the [F
     <img src="/src/vanDANA.png" width="520px"> 
 </div>
 
-Future efforrs are oriented towards developing a FSI solver coupled with Heat transfer based on the Distibuted Langrange Multiplier based Fictiious Domain method. 
+Future efforts are oriented towards developing a FSI solver coupled with Heat transfer based on the [Distibuted Langrange Multiplier based Fictiious Domain method](https://www.sciencedirect.com/science/article/pii/S0021999105000148). 
 
 ### Installation and Running the code
 
@@ -40,7 +40,6 @@ mpirun.mpich -np <# processors> python3 vanDANA.py
 - [user_inputs](./user_inputs) module
 
 ### Authors
-
 * Tejas Patel 
   
   (contact : patelte8@gmail.com)
