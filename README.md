@@ -1,6 +1,6 @@
 # vanDANA
 
-vanDANA is a high-performance FEM based Flow-thermal CFD solver utilizing the [FEniCS](https://fenicsproject.org/) library. 
+vanDANA is a high-performance stabilized FEM based Flow-thermal CFD solver utilizing the [FEniCS](https://fenicsproject.org/) library. 
 
 <div align="center">
     <img src="/src/vanDANA.png" width="520px"> 
@@ -40,9 +40,9 @@ mpirun.mpich -np <# processors> python3 vanDANA.py
 - [user_inputs](./user_inputs) module
 
 ### Authors
-* Tejas Patel 
+Tejas Patel 
   
-  (contact : patelte8@gmail.com)
+(contact : patelte8@gmail.com)
 
 
 
