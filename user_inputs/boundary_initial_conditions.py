@@ -20,9 +20,8 @@ def create_boundary_conditions(boundaries, inflow, **V):
 	bcT_LSPV = DirichletBC(V['fluid'][2], Constant(1), boundaries, 4)
 	bcT_RIPV = DirichletBC(V['fluid'][2], Constant(1), boundaries, 5)
 	bcT_RSPV = DirichletBC(V['fluid'][2], Constant(1), boundaries, 6)
-	bcT_MV   = DirichletBC(V['fluid'][2], Constant(1), boundaries, 2)
 	bcT_CB   = DirichletBC(V['fluid'][2], Constant(0), boundaries, 7)
-	bcT = [bcT_LIPV, bcT_LSPV, bcT_RIPV, bcT_RSPV, bcT_MV, bcT_CB]
+	bcT = [bcT_LIPV, bcT_LSPV, bcT_RIPV, bcT_RSPV, bcT_CB]
 
 	# Streamfunction
 	wall  = 'on_boundary'

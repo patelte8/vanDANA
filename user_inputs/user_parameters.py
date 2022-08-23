@@ -58,8 +58,14 @@ time_control = dict(
 				 C_no = 0.2, 					# Maximum possible Courant number
 			   	 dt = 0.002,  					# Time-step
 			   	 T = 1,							# Total runtime
-			   	 variable_timestep = False 	    # Calculate time-step using max Courant no. during runtime: used to accelerate temporal solution
+			   	 adjustable_timestep = False 	# Calculate time-step using max Courant no. during runtime: used to accelerate temporal solution
 			   )
+
+# Nature of the problem
+problem_physics = dict(
+				  solve_temperature = True,		# Enter "True" is you want to solve for temperature
+				  solve_FSI = False				# Enter "True" if you want to solve for fluid-structure interaction
+				)
 
 # Degree of variables
 velocity_degree = 2

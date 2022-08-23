@@ -247,7 +247,7 @@ def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, h_f_X, Re, ti
     if Mpi.get_rank() == 0:
         text_file_handles[1].write(f"{t}    {tsp}     {C_no_real}     {local_Re}\n")
 
-    if time_control.get('variable_timestep') == True:   
+    if time_control.get('adjustable_timestep') == True:   
         tsp = round_decimals_down(time_control.get('C_no')/DN, 5) 
 
     return tsp    

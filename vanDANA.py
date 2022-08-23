@@ -34,7 +34,7 @@ hmax_f = Mpi.Max(mesh1.hmax()); hmin_f = Mpi.Min(mesh1.hmin())
 dim = mesh1.geometry().dim()
 
 # Predict initial time-step
-if time_control.get('variable_timestep') == True:
+if time_control.get('adjustable_timestep') == True:
     time_control.update(dt = 0.5*time_control.get('C_no')*hmin_f)     
 tsp = dt = time_control.get('dt')
 T = time_control.get('T')
@@ -51,6 +51,8 @@ print(GREEN % "Froude number = {}".format(Fr), \
       BLUE % "; considering body force = {}".format(boolean_parameters.get('body_force')), flush = True)
 print(GREEN % "Eckert number = {}".format(Ec), \
       BLUE % "; considering viscous dissipation = {}".format(boolean_parameters.get('viscous_dissipation')), flush = True)
+print(BLUE % "\nSolve scaler (temperature) / transport equation = {}".format(problem_physics.get('solve_temperature')), flush = True)
+print(BLUE % "Solve fluid-structure interactions = {}".format(problem_physics.get('solve_FSI')), flush = True)
 print(RED % "\ntime_step = {}".format(tsp), flush = True)
 print(RED % "Total time = {}".format(T), "\n", flush = True)
 
@@ -154,8 +156,9 @@ while t < T:
 
     timer_s4.start()
     # print(BLUE % "Step 7: Energy conservation step", flush = True)
-    A4, b4 = flow_temp.assemble_temperature(T_, u_[0], dt)
-    flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
+    if problem_physics.get('solve_temperature') == True:
+        A4, b4 = flow_temp.assemble_temperature(T_, u_[0], dt)
+        flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
     s4 += timer_s4.stop()	    
 
     # Print output files
