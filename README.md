@@ -1,13 +1,14 @@
 # vanDANA
 
-vanDANA is a high-performance FEM based Flow-thermal CFD solver utilizing the [FEniCS](https://fenicsproject.org/) library. Future efforrs are oriented towards developing a FSI solver coupled with Heat transfer based on the Distibuted Langrange Multiplier based Fictiious Domain method. 
+vanDANA is a high-performance FEM based Flow-thermal CFD solver utilizing the [FEniCS](https://fenicsproject.org/) library. 
 
 <div align="center">
     <img src="/src/vanDANA.png" width="520px"> 
 </div>
 
+Future efforrs are oriented towards developing a FSI solver coupled with Heat transfer based on the Distibuted Langrange Multiplier based Fictiious Domain method. 
+
 ### Installation and Running the code
------------------------------------------------
 
 A singularity build file is provided that will install necessary libraries & setup the environment to run the code.
 
@@ -33,14 +34,12 @@ mpirun.mpich -np <# processors> python3 vanDANA.py
 ```
 
 ### Organization of the code
------------------------------------------------
 
 - [common](./common) module
-- [utilies](./utilities) module
+- [utilities](./utilities) module
 - [user_inputs](./user_inputs) module
 
 ### Authors
------------------------------------------------
 
 * Tejas Patel 
   
