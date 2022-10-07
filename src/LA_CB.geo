@@ -1,8 +1,8 @@
 //SetFactory("OpenCASCADE");
 
 //Mesh.CharacteristicLengthFactor = 0.05;  // Coarse
-//Mesh.CharacteristicLengthMin = 500;
-//Mesh.CharacteristicLengthMax = 1000;
+Mesh.CharacteristicLengthMin = 400;
+Mesh.CharacteristicLengthMax = 600;
 //Mesh.CharacteristicLengthFromCurvature = 1;
 
 Mesh.StlRemoveDuplicateTriangles = 1;
@@ -129,37 +129,37 @@ Transfinite Surface {201} = {13, 12, 14};
 // which can thus subsequently be remeshed.
  
 // Graded mesh option
-h_large = 600;
-h_small = 400;
+h_large = 300;
+h_small = 100;
 radius = 2.5*ma;
 Field[1] = Ball;
 Field[1].Radius=radius;
-Field[1].Thickness = 700;
+Field[1].Thickness = 200;
 Field[1].VIn=h_small;
 Field[1].VOut=h_large;
 Field[1].XCenter = cxt;
 Field[1].YCenter = cyt;
 Field[1].ZCenter = czt;
 
-Field[2] = Distance;
-Field[2].FieldX = 2;
-Field[2].FieldY = 2;
-Field[2].FieldZ = 2;
-Field[2].CurvesList = {7, 8, 9, 10, 11};
-Field[2].PointsList = {1, 2, 3, 4, 5};
-Field[2].SurfacesList = {2,3,4,5,6,7};
-Field[2].NumPointsPerCurve = 200000;
+//Field[2] = Distance;
+//Field[2].FieldX = 2;
+//Field[2].FieldY = 2;
+//Field[2].FieldZ = 2;
+//Field[2].CurvesList = {7, 8, 9, 10, 11};
+//Field[2].PointsList = {1, 2, 3, 4, 5};
+//Field[2].SurfacesList = {2,3,4,5,6,7};
+//Field[2].NumPointsPerCurve = 200000;
 
-Field[3] = Threshold;
-Field[3].InField = 2;
-Field[3].DistMax = 2000;
-Field[3].DistMin = 1400;
-Field[3].SizeMax = 400;
-Field[3].SizeMin = 30;
+//Field[3] = Threshold;
+//Field[3].InField = 2;
+//Field[3].DistMax = 2000;
+//Field[3].DistMin = 1400;
+//Field[3].SizeMax = 400;
+//Field[3].SizeMin = 100;
 
-Field[4] = Min;
-Field[4].FieldsList = {1,3};
-Background Field = 4;
+//Field[4] = Min;
+//Field[4].FieldsList = {1,3};
+Background Field = 1;//4;
 
 //Mesh.CharacteristicLengthExtendFromBoundary = 0;
 Mesh.MeshSizeExtendFromBoundary = 0;

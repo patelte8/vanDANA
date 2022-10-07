@@ -4,14 +4,15 @@ from dolfin import parameters
 from .constitutive_eq import *
 from .solver_options import * 
 from .functions import *
-from .variational_problem import *
-from .stabilizations import *
+from .flow_variational_problem import *
+from .solid_variational_problem import *
+from .temperature_variational_problem import *
+from .lagrange_variational_problem import *
+from .delta_interpolation import fsi_interpolation_code
+from .flow_stabilizations import *
+import sys, os, cppimport
 
 # Optimization options for dolfin
-parameters.update({ "linear_algebra_backend":"PETSc",
-                    "form_compiler":{"representation": 'uflacs',
-                                     "optimize": True,
-                                     "cpp_optimize": True,
-                                     "quadrature_degree": 5,
-                                     "cpp_optimize_flags": "-O3"},
+parameters.update({ "linear_algebra_backend": "PETSc",
+                    "form_compiler": FFC_parameters,
                     "std_out_all_processes": False})

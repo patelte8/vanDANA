@@ -111,14 +111,18 @@ class MemoryUsage:
 
 
 
-# Timer variables
-s1 = 0.0; s2 = 0.0; s3 = 0.0; s4 = 0.0 
-s5 = 0.0; s6 = 0.0; s7 = 0.0; s8 = 0.0
-si = 0.0; sm = 0.0; sr = 0.0; s_dt = 0.0
-
+# Timers
 timer_total = Timer("Total_run_time")
 timer_dt    = Timer("Time_step_timer")
+
 timer_s1    = Timer("Predict tentative velocity step")
 timer_s2    = Timer("Pressure correction step")
 timer_s3    = Timer("Velocity correction step")
 timer_s4    = Timer("Energy conservation step")
+timer_s5    = Timer("Solid momentum eq. step")
+timer_s6    = Timer("Lagrange multiplier/fictitious force step")
+timer_s7    = Timer("Solid temperature's lagrange multiplier step")
+
+timer_si    = Timer("Delta_fx_interpolation")
+timer_sm    = Timer("Move solid mesh")
+timer_sr    = Timer("Remesh solid mesh")

@@ -1,10 +1,8 @@
-from dolfin import UserExpression, CompiledExpression, Cell, Mesh, dot, \
-                   sym, nabla_grad, inner, conditional, \
-                   Vector, as_backend_type, VectorSpaceBasis, \
-                   compile_cpp_code, MeshFunction
+from dolfin import *
 from scipy.interpolate import splev
 import numpy as np
-import sys, math
+import sys, math, os, cppimport
+from ufl import Jacobian  
 
 # Functions for boundary conditions
 class Inflow(UserExpression):
@@ -147,6 +145,55 @@ class Temperature_balloon(UserExpression):
         return ()
 
 
+# Algorithm for remeshing / improving mesh quality
+def mesh_smoothening(mesh):
+
+    dim = mesh.geometry().dim()
+    x = SpatialCoordinate(mesh)
+    dx_dxi = Jacobian(mesh)
+    Jc = abs(det(dx_dxi))
+        
+    def grad_xi(f):
+        df_dx = grad(f)
+        return dot(df_dx,dx_dxi)
+        
+    h = mesh.hmax()
+    V = VectorFunctionSpace(mesh,"CG", 1)
+
+    # Variational problem for smoothing:
+    u = TrialFunction(V)
+    v = TestFunction(V)
+    x_smoothed = x + u
+
+    # Parameter to control smoothing effect;
+    # larger parameter => stronger smoothing:
+    smoothing_strength = Constant(1e4)
+
+    # Penalize both large changes of position over a single element and deviation
+    # from the unsmoothed position, with smoothing_strength deciding the relative
+    # weights.
+    dxz = Measure("dx", metadata={"quadrature_degree":2}, domain=mesh)
+    res = (smoothing_strength*inner(grad_xi(x_smoothed),grad_xi(v))
+           + dot(u,v))*(1/Jc)*dxz
+
+    # Solve for displacement to deform mesh; this does require a linear solve,
+    # but it should be efficient to approximate using an iterative solver
+    # with a loose tolerance.
+    uh = Function(V)
+    solve(lhs(res)==rhs(res),uh,
+          bcs=[DirichletBC(V,Constant((0,)*dim),"on_boundary")],
+          solver_parameters={"linear_solver" : "cg",
+                                 "krylov_solver":{"relative_tolerance":1e-4}})
+
+    # Deform by displacement from variational problem and plot smoothed mesh:
+    ALE.move(mesh, project(uh, V))
+        
+    ratios = MeshQuality.radius_ratio_min_max(mesh)
+    ratio_min = ratios[0]
+    ratio_max = ratios[1]
+
+    return mesh, ratio_min, ratio_max
+
 
 
 # Function to create nullspace
@@ -203,7 +250,14 @@ def Calc_total_DOF(Mpi, **kwargs):
     return DOFS
 
 
+# Delta-interpolation
+def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
 
+    u = Function(V)
+    u.vector().zero()
+    u0.set_allow_extrapolation(True)
+    fsi_interpolation.interpolate_delta(u0, u, abc, flag)
+    return u 
 
 
 # Other miscellaneous functions
@@ -253,22 +307,37 @@ def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, h_f_X, Re, ti
     return tsp    
 
 # Update solution at end of time loop
-def update_variables(u_, p_, T_):
+def update_variables(update, problem_physics):
+
+    u_ = update[0]
+    p_ = update[1]
 
     u_[2].assign(u_[1])
     u_[1].assign(u_[0])
     p_[2].assign(p_[1])    
     p_[1].assign(p_[0])
     
-    T_[3].assign(T_[2])
+    T_ = update[2]
+
     T_[2].assign(T_[1])
     T_[1].assign(T_[0])
 
+    if problem_physics.get('solve_FSI') == True:
 
+        Dp_ = update[3]
+        Lm_ = update[4]
 
-         
-        
-        
+        Dp_[2].assign(Dp_[1])
+        Lm_[1].assign(Lm_[0])
+
+        if problem_physics.get('solve_temperature') == True:
+
+            Ts_   = update[5]
+            LmTs_ = update[6]    
+             
+            Ts_[1].assign(Ts_[0])
+            LmTs_[1].assign(LmTs_[0])
+            
 
 
 

@@ -1,5 +1,8 @@
 from dolfin import PETScPreconditioner, PETScKrylovSolver, PETScOptions
 
+# Form compiler parameters
+FFC_parameters = {"representation": 'uflacs', "optimize": True, "cpp_optimize": True, "quadrature_degree": 5, "cpp_optimize_flags": "-O3"}
+
 # Solver parameters
 krylov_solvers=dict(
     monitor_convergence=False,
@@ -8,8 +11,6 @@ krylov_solvers=dict(
     nonzero_initial_guess=True,
     maximum_iterations=300,
     absolute_tolerance=1e-8)
-
-
 
 # Solver dictionaries
 tentative_velocity_solver=dict(
@@ -28,7 +29,8 @@ energy_conservation_solver=dict(
     solver_type='bicgstab',
     preconditioner_type='jacobi')
 
-
+solid_displacement_parameters = {"newton_solver":{"linear_solver":'bicgstab',"preconditioner":'jacobi', \
+                                                  "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":50}}
 
 # Define tentative_velocity_solver
 precond = PETScPreconditioner(tentative_velocity_solver['preconditioner_type'])

@@ -1,6 +1,7 @@
 from dolfin import Mesh, HDF5File, MeshFunction, \
 			VectorFunctionSpace, FunctionSpace, XDMFFile, Function, FunctionAssigner 
 import numpy as np
+from os import listdir
 import csv
 
 class get_mesh:
@@ -67,7 +68,7 @@ def read_restart_files(directory, mpi_comm, file_handle, **restart_variables):
 		y = 0
 		for i in value:
 			y += 1
-			hdf = HDF5File(mpi_comm, directory + "restart_files/" + str(key) + "_variable_" + str(y) + ".h5", "r")
+			hdf = HDF5File(mpi_comm, directory + "restart_variables/" + str(key) + "_variable_" + str(y) + ".h5", "r")
 			hdf.read(i, "/variable/vector_0"); del hdf
 
 	t = 0; tsp = 0
@@ -79,35 +80,70 @@ def read_restart_files(directory, mpi_comm, file_handle, **restart_variables):
 
 
 
+def extract_hdf5_data_for_xdmf_visualization(mpi_comm, curr_dir, bool_stream, problem_physics, fem_degree):
 
-def merge_xdmf_files(directory, filename, meshfile, deg_FS, fieldvariable, c):
+	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "u", "file_f.h5", fem_degree.get('velocity_degree'), "velocity", "v", False)
+	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "p", "file_f.h5", fem_degree.get('pressure_degree'), "pressure", "s", False)
+	
+	if problem_physics.get('solve_temperature') == True:
+		extract_hdf5_to_xdmf(mpi_comm, curr_dir, "T", "file_f.h5", fem_degree.get('temperature_degree'), "temperature", "s", False)
 
-    mesh = Mesh()
-    hdf_mesh = HDF5File(mesh.mpi_comm(),  directory + "user_inputs/" + meshfile , "r")
-    hdf_mesh.read(mesh,"/mesh",False)
+	if bool_stream == True:
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "vorticity", "file_f.h5", fem_degree.get('pressure_degree'), "vorticity", "s", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "stream_function", "file_f.h5", fem_degree.get('pressure_degree'), "stream_function", "s", False)
 
-    hdf = HDF5File(mesh.mpi_comm(),  directory + "results/HDF5_files/" + filename + "_.h5", "r")
+	if problem_physics.get('solve_FSI') == True:
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Dp", "file_s.h5", fem_degree.get('displacement_degree'), "displacement", "v", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "us", "file_s.h5", fem_degree.get('displacement_degree'), "velocity_solid", "v", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "ps", "file_s.h5", fem_degree.get('pressure_degree'), "pressure_solid", "s", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "J", "file_s.h5", fem_degree.get('pressure_degree'), "Jacobian", "s", False)	
 
-    attr = hdf.attributes(fieldvariable)
-    nsteps = attr['count']
 
-    if c == "s":
-        space = FunctionSpace(mesh, "CG", deg_FS)
-    elif c == "v":
-        space = VectorFunctionSpace(mesh, "CG", deg_FS)
 
-    var = Function(space)
+def extract_hdf5_to_xdmf(mpi_comm, directory, filename, meshfile, deg_FS, fieldvariable, c, rewrite_mesh):
 
-    file = XDMFFile(directory + "results/XDMF_files/" + filename + ".xdmf")
-    file.parameters['flush_output'] = True; file.parameters['rewrite_function_mesh'] = False
-    for i in range(nsteps):
+	mesh = Mesh(mpi_comm)
+	hdf_mesh = HDF5File(mesh.mpi_comm(), directory + "user_inputs/" + meshfile , "r")
+	hdf_mesh.read(mesh,"/mesh",False)
+	del hdf_mesh
 
-        dataset = fieldvariable+"/vector_%d"%i
-        attr = hdf.attributes(dataset)
-        t = attr['timestamp']
-        hdf.read(var, dataset)
+	# --------------------------------------------------------------------------------
 
-        var.rename(fieldvariable, fieldvariable)
-        file.write(var, t)
+	if c == "s":
+	    space = FunctionSpace(mesh, "CG", deg_FS)
+	elif c == "v":
+	    space = VectorFunctionSpace(mesh, "CG", deg_FS)
 
-    hdf.close(); file.close()
+	var = Function(space)
+
+	# --------------------------------------------------------------------------------
+
+	file = XDMFFile(directory + "results/XDMF_files/" + filename + ".xdmf")
+	file.parameters['flush_output'] = True; file.parameters['rewrite_function_mesh'] = rewrite_mesh
+
+	for k in range(250):
+
+		nm = 'HDF5_files_' + str(k)
+		if nm in listdir(directory + "results/"):
+
+			hdf = HDF5File(mesh.mpi_comm(), directory + "results/" + nm + "/" + filename + "_.h5", "r")
+			if hdf.has_dataset(fieldvariable):
+				attr = hdf.attributes(fieldvariable)
+				nsteps = attr['count']
+
+				for i in range(nsteps):
+
+					dataset = fieldvariable+"/vector_%d"%i
+					attr = hdf.attributes(dataset)
+					t = attr['timestamp']
+					hdf.read(var, dataset)
+
+					var.rename(fieldvariable, fieldvariable)
+					file.write(var, t)
+
+				hdf.close(); del hdf
+
+		else:
+			break
+
+	file.close()    

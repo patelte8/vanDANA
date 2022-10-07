@@ -14,6 +14,7 @@ From: quay.io/fenicsproject/dev:latest
 
     # Install fenics
     apt-get update
+    
     apt-get -y install python-pip
     apt-get -y install python3.5
     apt-get -y install virtualenv
@@ -35,21 +36,16 @@ From: quay.io/fenicsproject/dev:latest
     apt-get -y install python3-h5py 
     apt-get -y install python-future python-numpy python-scipy python-matplotlib; apt-get clean 
     
-########################################################################################################################    
-    
-    # Install GMSH
-    pip install --upgrade gmsh
-    
-    sudo apt-get -y install \
-    libglu1 \
-    libxcursor-dev \
-    libxft2 \
-    libxinerama1 \
-    libfltk1.3-dev \ 
-    libfreetype6-dev  \
-    libgl1-mesa-dev \
+##################### INSTALL GMSH   ###################################################################################
+
+    apt-get -y install libglu1
+    apt-get -y install libfontconfig1 libxrender1 libxcursor-dev libxft2 libxinerama1 libexpat1 libsm6 libxext
     
 
+    wget http://gmsh.info/bin/Linux/gmsh-4.8.4-Linux64.tgz \
+        && tar xf gmsh-4.8.4-Linux64.tgz \
+        && cp gmsh-4.8.4-Linux64/bin/gmsh /usr/local/bin/gmsh \
+    
 ########################################################################################################################
 
     python3 -m pip --no-cache-dir install cppimport pyvtk scitools3
@@ -80,21 +76,20 @@ From: quay.io/fenicsproject/dev:latest
                  -DBUILD_EXAMPLES=OFF \
                  -DBUILD_TESTING=OFF \
                  -DVTK_WRAP_PYTHON:BOOL=ON \
+                 -DVTK_PYTHON_VERSION=3 \
       	     -DVTK_WRAP_PYTHON_SIP:BOOL=ON \
         && make -j8 -C vtk-v8.1.1/build install \
         && rm -rf vtk-v8.1.1.tar.gz vtk-v8.1.1
     ########################################################################################################################
     
-    apt-get update; apt-get -y install gnuplot git; apt-get clean 
-    #rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-    
+    apt-get update; apt-get -y install gnuplot git; apt-get clean  
     mkdir code
 
 %environment
-    export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python3.6:/usr/local/lib/python3.6/dist-packages:/usr/local/lib/python3.6/site-packages/vtk:/home/fenics/local
+    export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python3.6:/usr/local/lib/python3.6/dist-packages:/usr/local/lib/python3.6/site-packages:/usr/local/lib/python3.6/site-packages/vtk:/home/fenics/local
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-
     export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/local/include/vtk-8.1:/usr/include/mpi
+    export PATH=$PATH:/gmsh-4.8.4-Linux64/bin
 
 
 
