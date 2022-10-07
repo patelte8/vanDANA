@@ -3,7 +3,7 @@ from mshr import *
 
 # Create mesh
 mesh1 = Mesh("box.xml")
-subdomains1 = MeshFunction("size_t", mesh1, "box._physical_region.xml")
+subdomains1 = MeshFunction("size_t", mesh1, "box_physical_region.xml")
 boundaries1 = MeshFunction("size_t", mesh1, "box_facet_region.xml")
 
 mesh2 = Mesh("flag.xml")
