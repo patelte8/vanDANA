@@ -261,8 +261,8 @@ def vanDANA_solver(args):
 	LogLevel.ERROR; Mpi.set_barrier()
 
 	initial_memory_use = Mpi.Sum(getMemoryUsage())
-	print(RED % 'Total intitial memory usage for setting up & assembly of the problem = {} MB (RSS)'.format(initial_memory_use), "\n")
-	print(RED % 'Start Simulatons', "\n", flush = True)
+	print(RED % 'Total intitial memory usage for setting up & assembly of the problem = {} MB (RSS)'.format(initial_memory_use), "\n", flush = True)
+	print(RED % 'Start Simulatons : t = {}'.format(t), "\n", flush = True)
 
 	# Time loop
 	while T > tsp and t < T:
