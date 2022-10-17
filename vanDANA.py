@@ -8,7 +8,7 @@ import array as arr
 from fenicstools import *
 from distutils.util import strtobool
 import vtk_py3 as vtk_py3
-import math, os, operator, copy, sys, json, vtk, matplotlib, cppimport, argparse
+import math, os, operator, copy, sys, io, json, vtk, matplotlib, cppimport, argparse
 matplotlib.use('Agg')
 from matplotlib import rc, pylab as plt
 
@@ -461,6 +461,11 @@ def vanDANA_solver(args):
 	    x.close()
 	for y,z in hdf5_file_handles.items():
 	    z.close(); del z
+
+	complete = io.TextIOWrapper(open(curr_dir + "results/complete.txt", "wb", 0), write_through=True)
+	if t >= T and Mpi.get_rank() == 0:
+		complete.seek(0); complete.write("{}".format("COMPLETED"))
+	complete.close()	    
 
 	# ---------------------------------------------------------------------------------     
 
