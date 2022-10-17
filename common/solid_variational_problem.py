@@ -124,7 +124,7 @@ class Solid_problem:
 		# --------------------------------		
 	
 	# Initial guess for newtons solver
-	def change_initial_guess(Dp_, mix):
+	def change_initial_guess(self, Dp_, mix):
 		
 		Dp_.vector().zero()
 		assign(mix.sub(1), interpolate(Constant(0), mix.sub(1).function_space().collapse()))
