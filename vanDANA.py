@@ -227,8 +227,7 @@ def vanDANA_solver(args):
 	# Move solid_mesh to restart position before starting simulation
 	if restart and problem_physics.get('solve_FSI') == True:
 	    print(RED % "Translate initial mesh to restart position\n", flush = True)
-	    Mv.vector()[:] = np.zeros(len(Mv.vector().get_local()))
-	    Mv.vector()[:] = Dp_[0].vector().get_local()[:]
+	    Mv.vector().zero(); Mv.vector()[:] = Dp_[0].vector().get_local()[:]
 	    ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
 	    solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
 	    lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
@@ -326,7 +325,11 @@ def vanDANA_solver(args):
 	    # print(BLUE % "5: Solid momentum eq. step", flush = True)    
 	    if problem_physics.get('solve_FSI') == True:    
 	        a5 = solid.assemble_solid_problem(problem_physics.get('compressible_solid'), Dp_, mix, uf_, Lm_[1], dt)
-	        solid.solve_solid_displacement(problem_physics.get('compressible_solid'), a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+	        try:
+	        	solid.solve_solid_displacement(problem_physics.get('compressible_solid'), a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+	        except:
+	        	solid.change_initial_guess(Dp_[1], mix)	        		        	
+	        	solid.solve_solid_displacement(problem_physics.get('compressible_solid'), a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 
 	        Dp_[0].vector().axpy(1.0, Dp_[1].vector())
 	        solid.compute_jacobian(J_, Dp_[0])
@@ -405,8 +408,7 @@ def vanDANA_solver(args):
 	    timer_sm.start()
 	    if problem_physics.get('solve_FSI') == True:
 	        
-	        Mv.vector()[:] = np.zeros(len(Mv.vector().get_local()))
-	        Mv.vector()[:] = Dp_[1].vector().get_local()[:]
+	        Mv.vector().zero(); Mv.vector()[:] = Dp_[1].vector().get_local()[:]
 	        ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
 	        solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
 	        lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)

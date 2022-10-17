@@ -80,13 +80,13 @@ class Solid_problem:
 
 		rho = self.rho; Ld = self.Ld; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
-		D_, ps_ = split(mix)
 
 		self.uf_.vector()[:] = uf_.vector().get_local()[:]
 		self.Lm_.vector()[:] = Lm_.vector().get_local()[:]
 
 		# Define incompressible solid problem
 		if compressible_solid == False:
+			D_, ps_ = split(mix)
 			a5 = rho*(1/(dt*dt))*dot(D_, h)*dx + inner(nabla_grad(h).T, stress_inc(Dp_[0] + D_, ps_, Sm))*dx + dot(J(F(Dp_[0] + D_))-1, j)*dx
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], h)*dx + (rho-1)*dot(f, h)*dx      
 
@@ -123,6 +123,12 @@ class Solid_problem:
 
 		# --------------------------------		
 	
+	# Initial guess for newtons solver
+	def change_initial_guess(Dp_, mix):
+		
+		Dp_.vector().zero()
+		assign(mix.sub(1), interpolate(Constant(0), mix.sub(1).function_space().collapse()))
+		assign(mix.sub(0), interpolate(Expression(('0.0', '0.0', '0.0'), degree = 2), mix.sub(0).function_space().collapse()))	
 
 	def compute_jacobian(self, J_, Dp):
 
