@@ -214,6 +214,7 @@ class Fluid_problem:
 	    
 	    [bc.apply(A, b) for bc in bcs]
 	    u_solver.solve(A, x.vector(), b)
+	    # solve(A, x.vector(), b, 'mumps')
 
 
 

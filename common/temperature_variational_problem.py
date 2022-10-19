@@ -163,7 +163,8 @@ class Fluid_temperature_problem:
 	def solve_temperature(self, A, x, b, bcs):
 	    
 	    [bc.apply(A, b) for bc in bcs]
-	    t_solver.solve(A, x.vector(), b)    		
+	    t_solver.solve(A, x.vector(), b)
+	    # solve(A, x.vector(), b, 'mumps')    		
 
 
 

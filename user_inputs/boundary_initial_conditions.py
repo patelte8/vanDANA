@@ -78,7 +78,8 @@ def solid_create_boundary_conditions(solid_mesh_R, compressible_solid, dt, **V):
 	elif compressible_solid == True:
 	    bcx_cylinder = DirichletBC(V['solid'][0], Constant((0, 0)), subdomain_R)
 
-	return [bcx_cylinder]    
+	bcx = [bcx_cylinder]  
+	return bcx    
 
 
 # Initial conditions
