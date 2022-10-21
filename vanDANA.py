@@ -217,7 +217,7 @@ def vanDANA_solver(args):
 
 	if problem_physics.get('solve_FSI') and problem_physics.get('solve_temperature') == True: 
 	    restart_write_variables.update(solid_temp = [Ts_[0]]); restart_write_variables['lagrange'].extend([LmTs_[0]]) 
-	    restart_read_variables.update(solid_temp = [Ts_[1]]); restart_write_variables['lagrange'].extend([LmTs_[1]]) 
+	    restart_read_variables.update(solid_temp = [Ts_[1]]); restart_read_variables['lagrange'].extend([LmTs_[1]]) 
 
 	if restart == True:
 	    t, tsp = read_restart_files(result_folder.folder, Mpi.mpi_comm, text_file_handles[2], **restart_read_variables) 
