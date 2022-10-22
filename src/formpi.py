@@ -8,7 +8,7 @@ x = mesh.coordinates()
 scaling_factor = 0.0001
 x[:, :] *= scaling_factor
 
-hdf = HDF5File(mesh.mpi_comm(), "file.h5", "w")
+hdf = HDF5File(mesh.mpi_comm(), "file_f.h5", "w")
 hdf.write(mesh, "/mesh")
 hdf.write(boundaries, "/boundaries")
 
