@@ -38,8 +38,6 @@ if blood_perfusion == True:
 # cs_RIPV = splrep(xdata,ydata,per=True)
 # xdata, ydata = read_boundary_conditions(directory, 'LIPV.csv')
 # cs_LIPV = splrep(xdata,ydata,per=True)
-# xdata, ydata = read_boundary_conditions(directory, 'temp.csv')
-# cs_temperatue = splrep(xdata,ydata,per=True)
 
 # # Expressions used during runtime
 # tim = Expression('t', t=0.0, degree=1)
@@ -49,8 +47,6 @@ if blood_perfusion == True:
 # param_LIPV={"time": tim, "nm": num_cycle, "period": t_period, "Area": 209.9, "Vsc": Vsc, "Tsc": Tsc, "func": cs_LIPV};
 # param_RSPV={"time": tim, "nm": num_cycle, "period": t_period, "Area": 188.35, "Vsc": Vsc, "Tsc": Tsc, "func": cs_RSPV};
 # param_RIPV={"time": tim, "nm": num_cycle, "period": t_period, "Area": 437.6, "Vsc": Vsc, "Tsc": Tsc, "func": cs_RIPV};                     
-# param_temperature={"time": tim, "func": cs_temperatue, "Tsc": Tsc}
-
 
 def evaluate_boundary_val(a):
 
