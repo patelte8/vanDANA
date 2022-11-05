@@ -1,4 +1,7 @@
-                    GNU GENERAL PUBLIC LICENSE
+ Copyright 2022 Tejas Patel
+
+
+                      GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
