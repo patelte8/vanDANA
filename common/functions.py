@@ -49,14 +49,14 @@ namespace py = pybind11;
 #include <dolfin/mesh/Cell.h>
 #include <dolfin/geometry/Point.h>
 
-class Inflow : public dolfin::Expression
+class Inflow_x : public dolfin::Expression
 {
 public:
     
     double v;
     std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data;
 
-    Inflow(double v_, std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data_) : Expression(3) {
+    Inflow_x(double v_, std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data_) : Expression() {
         v = v_;
         cell_data = cell_data_;
     }
@@ -68,19 +68,72 @@ public:
         
         assert(c.local_facet >= 0);
         dolfin::Point n = cell.normal(c.local_facet);
-
         values[0] = -n.x()*v;  
-        values[1] = -n.y()*v;
-        values[2] = -n.z()*v;
+    }
+};
+
+class Inflow_y : public dolfin::Expression
+{
+public:
+    
+    double v;
+    std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data;
+
+    Inflow_y(double v_, std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data_) : Expression() {
+        v = v_;
+        cell_data = cell_data_;
+    }
+
+    void eval(Eigen::Ref<Eigen::VectorXd> values, Eigen::Ref<const Eigen::VectorXd> x, const ufc::cell& c) const override
+    {
+        assert(cell_data);
+        const dolfin::Cell cell(*cell_data->mesh(), c.index);
+        
+        assert(c.local_facet >= 0);
+        dolfin::Point n = cell.normal(c.local_facet);
+        values[0] = -n.y()*v;  
+    }
+};
+
+class Inflow_z : public dolfin::Expression
+{
+public:
+    
+    double v;
+    std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data;
+
+    Inflow_z(double v_, std::shared_ptr<dolfin::MeshFunction<std::size_t>> cell_data_) : Expression() {
+        v = v_;
+        cell_data = cell_data_;
+    }
+
+    void eval(Eigen::Ref<Eigen::VectorXd> values, Eigen::Ref<const Eigen::VectorXd> x, const ufc::cell& c) const override
+    {
+        assert(cell_data);
+        const dolfin::Cell cell(*cell_data->mesh(), c.index);
+        
+        assert(c.local_facet >= 0);
+        dolfin::Point n = cell.normal(c.local_facet);
+        values[0] = -n.z()*v;  
     }
 };
 
 PYBIND11_MODULE(SIGNATURE, m)
 {
-  py::class_<Inflow, std::shared_ptr<Inflow>, dolfin::Expression>(m, "Inflow")
+    py::class_<Inflow_x, std::shared_ptr<Inflow_x>, dolfin::Expression>(m, "Inflow_x")
     .def(py::init<double, std::shared_ptr<dolfin::MeshFunction<std::size_t>>>())
-    .def_readwrite("v", &Inflow::v)
-    .def_readwrite("cell_data", &Inflow::cell_data);
+    .def_readwrite("v", &Inflow_x::v)
+    .def_readwrite("cell_data", &Inflow_x::cell_data);
+    
+    py::class_<Inflow_y, std::shared_ptr<Inflow_y>, dolfin::Expression>(m, "Inflow_y")
+    .def(py::init<double, std::shared_ptr<dolfin::MeshFunction<std::size_t>>>())
+    .def_readwrite("v", &Inflow_y::v)
+    .def_readwrite("cell_data", &Inflow_y::cell_data);
+    
+    py::class_<Inflow_z, std::shared_ptr<Inflow_z>, dolfin::Expression>(m, "Inflow_z")
+    .def(py::init<double, std::shared_ptr<dolfin::MeshFunction<std::size_t>>>())
+    .def_readwrite("v", &Inflow_z::v)
+    .def_readwrite("cell_data", &Inflow_z::cell_data);   
 }
 '''
 
@@ -213,16 +266,15 @@ def attach_nullspace(Ap, x_, Q):
 
 
 # Function to calculate denominator for courant number
-def DENO(u_, Mpi, h_f_X):
+def DENO(u, u_components, Mpi, mesh, h_f_X):
 
     DN_local = 0
     NM_local = 0
-    mesh = u_.function_space().mesh()
     vertex_values_h_f_X = h_f_X.compute_vertex_values(mesh)
     vertex_mag_u = np.zeros(len(vertex_values_h_f_X))
 
-    for i in range(u_.geometric_dimension()):
-        vertex_values_u = u_.sub(i).compute_vertex_values(mesh)
+    for ui in range(u_components):
+        vertex_values_u = u[ui].compute_vertex_values(mesh) 
         DN_local += np.max(np.abs(vertex_values_u / vertex_values_h_f_X))
         vertex_mag_u += np.square(vertex_values_u)
 
@@ -262,15 +314,17 @@ def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
 
 # Other miscellaneous functions
 
-# symmetric gradient
-def epsilon(u):
+# Divergence of a vector
+def divergence(u, u_components):
     
-    return sym(nabla_grad(u))
+    DIV = 0
+    for ui in range(u_components): DIV += u[ui].dx(ui) 
+    return DIV
 
 # Viscous dissipation source term (for energy equation)
 def Qf(u, Ec, Re):
     
-    return inner(((2*Ec)/Re)*epsilon(u), nabla_grad(u))
+    return inner(((2*Ec)/Re)*sym(nabla_grad(u)), nabla_grad(u))
 
 # Perfusion equation (quadratic)
 def PFE(Tf_n): 
@@ -291,29 +345,35 @@ def round_decimals_down(number:float, decimals:int=8):
     return math.floor(number * factor) / factor
 
 # Calculate and print runtime statistics and update timestep
-def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, h_f_X, Re, time_control): 
+def calc_runtime_stats_timestep(Mpi, u, u_components, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, time_control): 
 
-    DN, NM = DENO(u, Mpi, h_f_X)
+    DN, NM = DENO(u, u_components, Mpi, mesh, h_f_X)
     C_no_real = DN*tsp
     local_Re = NM*float(Re) 
+    tsp_min = 0.125*hmin_f
 
     Mpi.set_barrier()
     if Mpi.get_rank() == 0:
         text_file_handles[1].write(f"{t}    {tsp}     {C_no_real}     {local_Re}\n")
 
-    if time_control.get('adjustable_timestep') == True:   
-        tsp = round_decimals_down(time_control.get('C_no')/DN, 5) 
+    if time_control.get('adjustable_timestep') == True:
 
-    return tsp    
+        if C_no_real > time_control.get('C_no'):
+            tsp = round_decimals_down((0.25*time_control.get('C_no') + 0.75*C_no_real)/DN, 5)
+        if tsp <= tsp_min:
+            tsp = round_decimals_down(tsp_min, 5)     
+
+    return tsp 
 
 # Update solution at end of time loop
-def update_variables(update, problem_physics):
+def update_variables(update, u_components, problem_physics):
 
     u_ = update[0]
     p_ = update[1]
 
-    u_[2].assign(u_[1])
-    u_[1].assign(u_[0])
+    for ui in range(u_components):
+        u_[2][ui].assign(u_[1][ui])
+        u_[1][ui].assign(u_[0][ui]) 
     p_[2].assign(p_[1])    
     p_[1].assign(p_[0])
     

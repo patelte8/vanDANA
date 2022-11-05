@@ -16,8 +16,8 @@ from matplotlib import rc, pylab as plt
 def vanDANA_solver(args):
 	
 	restart = args.restart
-	calc_stream_function = args.calc_stream_function
-	print_control.update({"a": args.a})
+	post_process = args.post_process
+	print_control.update({"a": args.a, "b": args.b})
 	fem_degree.update({"velocity_degree": args.velocity_degree, "displacement_degree": args.displacement_degree, "temperature_degree": args.temperature_degree})
 	time_control.update({"T": args.T, "adjustable_timestep": args.adjustable_timestep})
 	problem_physics.update({"solve_temperature": args.solve_temperature, "solve_FSI": args.solve_FSI, "viscous_dissipation": args.viscous_dissipation})
@@ -37,6 +37,7 @@ def vanDANA_solver(args):
 	print(RED % "\nRestart : {}".format(str(restart)), flush = True)
 	print(BLUE % "\nSolve scaler (temperature) / transport equation = {}".format(problem_physics.get('solve_temperature')), flush = True)
 	print(BLUE % "Solve fluid-structure interactions = {}".format(problem_physics.get('solve_FSI')), flush = True)
+	print(BLUE % "\nFEM stabilizations = {}".format(str([k for k, v in stabilization_parameters.items() if v == True])), flush = True)
 
 	time_scale = characteristic_scales.get('Lsc')/characteristic_scales.get('Vsc')
 	characteristic_scales.update(Tsc = time_scale)
@@ -71,7 +72,7 @@ def vanDANA_solver(args):
 
 	# Predict initial time-step
 	if time_control.get('adjustable_timestep') == True:
-	    initial_time_step = round_decimals_down(0.5*time_control.get('C_no')*hmin_f, 5)
+	    initial_time_step = round_decimals_down(0.2*hmin_f, 5)
 	    time_control.update(dt = initial_time_step)     
 	tsp = dt = time_control.get('dt')
 	T = time_control.get('T')
@@ -107,8 +108,8 @@ def vanDANA_solver(args):
 
 	# Initialize flow problem
 	flow = Fluid_problem(fluid_mesh, result_folder.bool_stream); FS = dict(fluid = flow.F) 
-	u_ = flow.variables['u_']; p_ = flow.variables['p_']; Lm_f = flow.variables['Lm_f']
-	vort = flow.variables['vort']; psi = flow.variables['psi']
+	u_components = flow.u_components; u_ = flow.variables['u_'];  uv = flow.variables['uv']; assigner_uv = flow.assigner_uv 
+	p_ = flow.variables['p_']; Lm_f = flow.variables['Lm_f']; vort = flow.variables['vort']; psi = flow.variables['psi']
 
 	# Initialize temperature problem
 	flow_temp = Fluid_temperature_problem(fluid_mesh); FS.update(fluid_temp=flow_temp.F)
@@ -145,10 +146,12 @@ def vanDANA_solver(args):
 	        solid_create_initial_conditions(Dp_, mix, dt)
 
 	# Boundary conditions
-	# cpp_code = compile_cpp_code(code).Inflow(0, MeshFunction('size_t', fluid_mesh.mesh, 0))
-	# RSPV = RIPV = LSPV = LIPV = CompiledExpression(cpp_code, degree = 2)
-	# inflow = [LSPV, LIPV, RSPV, RIPV]
-	bcs = fluid_create_boundary_conditions(fluid_mesh, **FS)
+	# cpp_code = compile_cpp_code(code)
+	# RSPV_x = RIPV_x = LSPV_x = LIPV_x = CompiledExpression(cpp_code.Inflow_x(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
+	# RSPV_y = RIPV_y = LSPV_y = LIPV_y = CompiledExpression(cpp_code.Inflow_y(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
+	# RSPV_z = RIPV_z = LSPV_z = LIPV_z = CompiledExpression(cpp_code.Inflow_z(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
+	inflow = [] #dict(x=[LSPV_x, LIPV_x, RSPV_x, RIPV_x], y=[LSPV_y, LIPV_y, RSPV_y, RIPV_y], z=[LSPV_z, LIPV_z, RSPV_z, RIPV_z])	
+	bcs = fluid_create_boundary_conditions(fluid_mesh, inflow, **FS)
 
 	if problem_physics.get('solve_FSI') == True:
 	    bcs.update(solid = solid_create_boundary_conditions(solid_mesh_R, problem_physics.get('compressible_solid'), dt, **FS))
@@ -172,9 +175,8 @@ def vanDANA_solver(args):
 
 	# Time
 	t = 0
-	# tim.t = t
 
-	counters = create_counters(4)   # enter number of counters required
+	counters = create_counters(5)   # enter number of counters required
 
 	# Timer variables
 	s1, s2, s3, s4, s5, s6, s7, si, sm, sr, s_dt = [0.0 for _ in range(11)]
@@ -208,12 +210,17 @@ def vanDANA_solver(args):
 	# --------------------------------------------------------------------------------- 
 
 	# Restart_variables
-	restart_write_variables = dict(fluid = [u_[0], u_[1], p_[0], p_[1], vort, psi], fluid_temp = [T_[0], T_[1]]) 
-	restart_read_variables = dict(fluid = [u_[1], u_[2], p_[1], p_[2], vort, psi], fluid_temp = [T_[1], T_[2]])
+	restart_write_variables = dict(fluid = []); restart_read_variables = dict(fluid = [])
+	for ui in range(u_components):	
+		restart_write_variables['fluid'].extend([u_[0][ui]]); restart_read_variables['fluid'].extend([u_[1][ui]])
+	for ui in range(u_components):	
+		restart_write_variables['fluid'].extend([u_[1][ui]]); restart_read_variables['fluid'].extend([u_[2][ui]]) 
+	restart_write_variables['fluid'].extend([p_[0], p_[1], vort, psi]); restart_write_variables.update(fluid_temp = [T_[0], T_[1]])
+	restart_read_variables['fluid'].extend([p_[1], p_[2], vort, psi]); restart_read_variables.update(fluid_temp = [T_[1], T_[2]])
 
 	if problem_physics.get('solve_FSI') == True:
 	    restart_write_variables.update(solid = [Dp_[0], Dp_[1], ps_], lagrange = [Lm_[0]])
-	    restart_read_variables.update(solid = [Dp_[0], Dp_[2], ps_], lagrange = [Lm_[1]])        
+	    restart_read_variables.update(solid = [Dp_[0], Dp_[2], ps_], lagrange = [Lm_[1]])       
 
 	if problem_physics.get('solve_FSI') and problem_physics.get('solve_temperature') == True: 
 	    restart_write_variables.update(solid_temp = [Ts_[0]]); restart_write_variables['lagrange'].extend([LmTs_[0]]) 
@@ -237,7 +244,7 @@ def vanDANA_solver(args):
 	# ---------------------------------------------------------------------------------         
 
 	# Calculate Total DOF's solved
-	DOFS_variables = dict(velocity = [u_[0]], pressure = [p_[0]])
+	DOFS_variables = dict(velocity = [u_[0][ui] for ui in range(u_components)], pressure = [p_[0]])
 	if problem_physics.get('solve_temperature') == True: DOFS_variables.update(temperature = [T_[0]])
 	if problem_physics.get('solve_FSI') == True:
 	    DOFS_variables.update(displacement = [Dp_[1]], lagrange_multiplier = [Lm_[0]])
@@ -272,10 +279,11 @@ def vanDANA_solver(args):
 	    # Update current time
 	    t += tsp   
 
-	    # Update boundary conditions
-	    # tim.t = t; num_cycle.cycle = int(t / t_period)     
-	    # inflow[0].v = evaluate_boundary_val(param_LSPV); inflow[1].v = evaluate_boundary_val(param_LIPV)
-	    # inflow[2].v = evaluate_boundary_val(param_RSPV); inflow[3].v = evaluate_boundary_val(param_RIPV)
+	    # Update boundary conditions : only if time-dependent
+	    # parabolic_profile.t = t; tim.t = t; num_cycle.cycle = int(t / t_period)     
+	    # for ui, value in inflow.items():     
+		   #  inflow[ui][0].v = evaluate_boundary_val(param_LSPV); inflow[ui][1].v = evaluate_boundary_val(param_LIPV)
+		   #  inflow[ui][2].v = evaluate_boundary_val(param_RSPV); inflow[ui][3].v = evaluate_boundary_val(param_RIPV)
 
 	    if problem_physics.get('solve_FSI') == True:
 	        timer_si.start()
@@ -300,6 +308,8 @@ def vanDANA_solver(args):
 	    flow.solve_velocity_correction(u_[0], b3, bcs['velocity'])
 	    s3 += timer_s3.stop()
 
+	    assigner_uv.assign(uv, [u_[0][ui] for ui in range(u_components)])
+
 	    # --------------------------------------------------------------------------------- 
 
 	    if problem_physics.get('solve_FSI') and problem_physics.get('solve_temperature') == True:
@@ -310,7 +320,7 @@ def vanDANA_solver(args):
 	    timer_s4.start()
 	    # print(BLUE % "4: Energy conservation step", flush = True)
 	    if problem_physics.get('solve_temperature') == True:
-	        A4, b4 = flow_temp.assemble_temperature(T_, u_[0], LmTf_, dt)
+	        A4, b4 = flow_temp.assemble_temperature(T_, uv, LmTf_, dt)
 	        flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
 	    s4 += timer_s4.stop()	    
 
@@ -318,7 +328,7 @@ def vanDANA_solver(args):
 
 	    if problem_physics.get('solve_FSI') == True:
 	        timer_si.start()
-	        uf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, u_[0], FS['lagrange'][0], interpolation_fx, "S"))
+	        uf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, uv, FS['lagrange'][0], interpolation_fx, "S"))
 	        si += timer_si.stop()
 
 	    timer_s5.start()    
@@ -364,12 +374,12 @@ def vanDANA_solver(args):
 	    # --------------------------------------------------------------------------------- 
 
 	    # Print output files
-	    if counters[0] > print_control['a']:
+	    if counters[0] >= print_control['a']:
 
 	        reset_counter(counters, 0); Mpi.set_barrier()
 	        print(BLUE % "File printing in progress --- Simulation run time : {} , Wall time elapsed : {} sec".format(t, timer_total.elapsed()[0]), flush = True) 
 
-	        vort, psi = flow.calc_vorticity_streamfunction(u_[0], bcs['streamfunction'])
+	        vort, psi = flow.calc_vorticity_streamfunction(uv, bcs['streamfunction'])
 
 	        write_solution_files(restart, problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)
 
@@ -386,23 +396,31 @@ def vanDANA_solver(args):
 
 	    # --------------------------------------------------------------------------------- 
 
-	    # Print post-processing data / calculate new time-step if required 
-	    if counters[1] > print_control['b']:
+	    # Output post-processing data
+	    if post_process == True:
+		    if counters[1] >= print_control['b']:
 
-	        reset_counter(counters, 1)
-	        # flow.post_process_data(Mpi, u_, p_, t, tsp, text_file_handles)
-	        # flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
-	        solid.post_process_data(Mpi, us_, ps_, t, text_file_handles)
-	        lagrange.post_process_data(Mpi, Lm_[0], t, text_file_handles)
-	        solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
+		        reset_counter(counters, 1)
+		        flow.post_process_data(Mpi, uv, p_[0], t, tsp, text_file_handles)
+		        if problem_physics.get('solve_temperature') == True: 
+		        	flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
+		        if problem_physics.get('solve_FSI') == True:
+		        	solid.post_process_data(Mpi, us_, ps_, t, text_file_handles)
+		        	lagrange.post_process_data(Mpi, Lm_[0], t, text_file_handles)
+			        if problem_physics.get('solve_temperature') == True:	
+			        	solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
 
-	        tsp = calc_runtime_stats_timestep(Mpi, u_[0], t, tsp, text_file_handles, flow.h_f_X, flow.Re, time_control)
+	    # If required: calculate new time-step      
+	    if counters[4] >= print_control['e']:    
+
+	        reset_counter(counters, 4)
+	        tsp = calc_runtime_stats_timestep(Mpi, u_[0], u_components, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, flow.Re, time_control)
 	        dt  = Constant(tsp)         
 
 	    # ---------------------------------------------------------------------------------     
 
 	    # Update previous solution
-	    update_variables(update, problem_physics)
+	    update_variables(update, u_components, problem_physics)
 
 	    # Move mesh
 	    timer_sm.start()
@@ -419,7 +437,7 @@ def vanDANA_solver(args):
 	    # Remeshing solid current-congifuration mesh
 	    timer_sr.start()
 	    if problem_physics.get('solve_FSI') == True:
-	        if counters[3] > print_control['d']:
+	        if counters[3] >= print_control['d']:
 
 	            reset_counter(counters, 3)
 	            print(GREEN % "Remeshing solid current-congifuration mesh", flush = True)
@@ -435,7 +453,7 @@ def vanDANA_solver(args):
 	    # --------------------------------------------------------------------------------- 
 
 	    # Timing tasks
-	    if counters[2] > print_control['c']:
+	    if counters[2] >= print_control['c']:
 	    	
 	        reset_counter(counters, 2); Mpi.set_barrier() 
 	        if Mpi.get_rank() == 0:
@@ -451,9 +469,11 @@ def vanDANA_solver(args):
 
 	Mpi.set_barrier() 
 	if Mpi.get_rank() == 0: 
-	    text_file_handles[3].write(timings(TimingClear.keep, [TimingType.wall]).str(True))
-	    text_file_handles[3].write("{} {}".format("\n\n", json.dumps(DOFS)))
+	    text_file_handles[3].write("{} {} {}".format("\n", "DOFs -->", json.dumps(DOFS)))
 	    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total simulation wall time : ", wall_time, " sec"))
+	    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total intitial memory usage for setting up & assembly of the problem : ", initial_memory_use, "MB (RSS)"))
+	    text_file_handles[3].write("{} {} {} {} {}".format("\n\n", "Total memory usage of solver : ", str(memory.memory - initial_memory_use), "MB (RSS)", "\n\n\n"))
+	    text_file_handles[3].write(timings(TimingClear.keep, [TimingType.wall]).str(True))
 
 	print(BLUE % "Total simulation wall time : {} sec".format(wall_time), "\n", flush = True)
 
@@ -487,9 +507,10 @@ if __name__ == '__main__':
 	parser.add_argument('-displacement_degree', type=int, metavar='', required=False, default=fem_degree["displacement_degree"])
 	parser.add_argument('-temperature_degree', type=int, metavar='', required=False, default=fem_degree["temperature_degree"])
 	parser.add_argument('-adjustable_timestep', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=time_control["adjustable_timestep"])
-	parser.add_argument('-calc_stream_function', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=calc_stream_function)
+	parser.add_argument('-post_process', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=post_process)
 	parser.add_argument('-T', type=float, metavar='', required=False, default=time_control["T"])
 	parser.add_argument('-a', type=int, metavar='', required=False, default=print_control["a"])
+	parser.add_argument('-b', type=int, metavar='', required=False, default=print_control["b"])
 
 	# arguments are stored in "args"
 	args = parser.parse_args()				

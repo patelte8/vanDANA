@@ -174,7 +174,7 @@ def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_han
 
 	# --------------------------------			
 
-	u = flow_variables['u_'][0]; p = flow_variables['p_'][0]; vort = flow_variables['vort']; psi = flow_variables['psi']
+	u = flow_variables['uv']; p = flow_variables['p_'][0]; vort = flow_variables['vort']; psi = flow_variables['psi']
 
 	if problem_physics.get('solve_temperature') == True: 
 		T = flow_temp_variables['T_'][0]

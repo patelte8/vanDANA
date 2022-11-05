@@ -6,12 +6,12 @@ restart = False									# Restart parameter
 # Physics of the problem
 # ---------------------------------------------------------------------
 problem_physics = dict(
-				  solve_temperature = True,		# Enter "True" is you want to solve for temperature
+				  solve_temperature = True,		# enter "True" if you want to solve for temperature
 
-				  solve_FSI = True,				# Enter "True" if you want to solve for fluid-structure interaction
+				  solve_FSI = True,				# enter "True" if you want to solve for fluid-structure interaction
 				  
-				  compressible_solid = True,	# Enter "True" if compressible: Also remember to specify compressibility (Ld)
-				  								# Enter "False" if incompressible
+				  compressible_solid = True,	# enter "True" if compressible: Also remember to specify compressibility (Ld)
+				  								# enter "False" if incompressible
 
 				  viscous_dissipation = True,	# Heat release due to viscous gradients 
 
@@ -30,15 +30,14 @@ interpolation_fx = 'phi4'						# Delta-function interpolation for FSI problems
 stabilization_parameters = dict(	
 
 	# Navier-stokes
-	stab_SUPG_NS = False,
-	stab_PSPG_NS = False,
-	stab_cross_NS = False,
-	stab_LSIC_NS = False,
-	stab_backflow_NS = False,
+	SUPG_NS = False,							# explicit
+	PSPG_NS = False,							# explicit		
+	crosswind_NS = False,						# implicit
+	backflow_NS = False,					
 
 	# Energy-equation
-	stab_SUPG_HT = False,
-	stab_cross_HT = False
+	SUPG_HT = False,							# explicit
+	crosswind_HT = False						# implicit
 )
 
 alpha = Constant(0.85)                   	  	# SUPG/PSPG stabilization constant 
@@ -114,19 +113,20 @@ def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, Spht_
 
 	return Re, Pr, Ec, Fr
 
-# File printing
+# Enter "True" if you want to post-process data
+# ---------------------------------------------------------------------
+post_process = True
+
+# File printing / solid-remeshing control
 # ---------------------------------------------------------------------
 print_control = dict(
                   a = 40,   # for printing variables and restart files
-                  b = 50,  	# for post processing data/runtime_courant_no text file
-                  c = 2, 	# for compute_time text file
-                  d = 4    	# for remeshing solid current-configuration mesh		
+                  b = 50,  	# for post processing data
+                  c = 20, 	# for simulation_wall_time text file
+                  d = 5,   	# for remeshing solid current-configuration mesh		
+                  e = 20    # for runtime_tsp_courant_no_stats text file	
                 )
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
 # --------------------------------------------------------------------- 
 calc_stream_function = True
-   
-  
-
-

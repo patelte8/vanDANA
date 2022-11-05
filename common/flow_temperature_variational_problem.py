@@ -4,7 +4,7 @@ from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
 from .solver_options import t_solver
 from .constitutive_eq import *
-from .flow_stabilizations import *
+from .fem_stabilizations import *
 import sys
 
 sys.path.insert(0,  '..')
@@ -48,8 +48,7 @@ class Fluid_temperature_problem:
 
 		self.A4 = None
 		self.matrix = dict(Tij=None, Wij = None, BPij = None, BPj = None, \
-					   A4_as4 = None, A4_SCW4 = None, A4_R1ij = None, \
-					   b4_R2ij = None, b4_Ls4 = None, b4_Qij = None)
+					   A4_SCW4 = None, A4_R1ij = None, b4_R2ij = None, b4_Ls4 = None, b4_Qij = None)
 
 		self.F = [G]
 		self.dim = dim 
@@ -128,16 +127,12 @@ class Fluid_temperature_problem:
 			A4 += d['BPij']; b4 += d['BPj']
 		
 		# Stabilization terms
-		if stabilization_parameters.get('stab_SUPG_HT') == True:
-			R = Fluid_temperature_problem.residual_energy_eq(self, Tp, T_[1], u, LmTf_, dt)
-			S4 = tau(alpha, u, h_f, Pe, dt)*dot(R, Pop(u, ttf))*dx
-			as4 = lhs(S4); Ls4 = rhs(S4)
-			d['A4_as4'] = assemble(as4, tensor=d['A4_as4'])
-			d['b4_Ls4'] = assemble(Ls4, tensor=d['b4_Ls4'])
-			A4.axpy(1.0, d['A4_as4'], True)
-			b4.axpy(1.0, d['b4_Ls4'])
+		if stabilization_parameters['SUPG_HT'] == True:
+			R = Fluid_temperature_problem.residual_energy_eq(self, T_[1], T_[2], u, LmTf_, dt)
+			d['b4_Ls4'] = assemble(tau(alpha, u, h_f, Pe, dt)*dot(R, Pop(u, ttf))*dx, tensor=d['b4_Ls4'])
+			b4.axpy(-1.0, d['b4_Ls4'])
 				
-		if stabilization_parameters.get('stab_cross_HT') == True:
+		if stabilization_parameters['crosswind_HT'] == True:
 			R = Fluid_temperature_problem.residual_energy_eq(self, T_[1], T_[2], u, LmTf_, dt)
 			SCW4 = inner(tau_cw(C_cw, T_[1], h_f, Pe, R)*Pop_CW(u, Tp), nabla_grad(ttf))*dx
 			d['A4_SCW4'] = assemble(SCW4, tensor=d['A4_SCW4'])
