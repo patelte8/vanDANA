@@ -286,6 +286,11 @@ def DENO(u, u_components, Mpi, mesh, h_f_X):
     return DN, NM
 
 
+# Function to assign-vector in MPI
+def vector_assign_in_parallel(v, w):
+
+    v.vector().set_local(w.vector().get_local()[:])
+    v.vector().apply("insert")
 
 
 # Degrees of freedom
