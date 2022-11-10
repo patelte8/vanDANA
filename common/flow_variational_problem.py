@@ -22,7 +22,7 @@ class Fluid_problem:
 	def __init__(self, fluid_mesh, bool_stream):
 		
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
-		if not problem_physics.get('viscous_dissipation'): Ec = 0.0
+		if not problem_physics['viscous_dissipation']: Ec = 0.0
 
 		mesh = fluid_mesh.mesh
 		dim = mesh.geometry().dim()
@@ -30,13 +30,13 @@ class Fluid_problem:
 		# Velocity components
 		self.u_components = dim
 		
-		V  = FunctionSpace(mesh, 'P', fem_degree.get('velocity_degree'), constrained_domain = constrained_domain)		  # Fluid velocity   
-		Q  = FunctionSpace(mesh, 'P', fem_degree.get('pressure_degree'), constrained_domain = constrained_domain)		  # Fluid pressure
-		Z1 = VectorFunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))                                            # Lagrange multiplier
+		V  = FunctionSpace(mesh, 'P', fem_degree['velocity_degree'], constrained_domain = constrained_domain)		  # Fluid velocity   
+		Q  = FunctionSpace(mesh, 'P', fem_degree['pressure_degree'], constrained_domain = constrained_domain)		  # Fluid pressure
+		Z1 = VectorFunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])                                            # Lagrange multiplier
 
 		# --------------------------------
 
-		Vp = VectorFunctionSpace(mesh, 'P', fem_degree.get('velocity_degree'))
+		Vp = VectorFunctionSpace(mesh, 'P', fem_degree['velocity_degree'])
 
 		# Function assigner : scaler components to vector
 		self.assigner_uv = FunctionAssigner(Vp, [V for ui in range(self.u_components)])
@@ -68,7 +68,7 @@ class Fluid_problem:
 
 		# Body force
 		f = Constant((0,)*dim)
-		if problem_physics.get('body_force') == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
+		if problem_physics['body_force'] == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
 		
 		# --------------------------------
 
@@ -125,11 +125,11 @@ class Fluid_problem:
 			d['Bij'][ui] = assemble(dot(f[ui], v)*dx, tensor=d['Bij'][ui])                                  # Body-force vector
 			d['Pij'][ui] = assemble(dot(p.dx(ui), v)*dx, tensor=d['Pij'][ui])                               # Pressure-gradient matrix
 
-		if problem_physics.get('solve_FSI') == True:
+		if problem_physics['solve_FSI'] == True:
 			for ui in range(self.u_components):
 				d['Yij'][ui] = assemble(dot(self.Lm1[ui], v)*dx, tensor=d['Yij'][ui])                       # Lagrange-multiplier matrix
 
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			self.A = self.matrix['Kij'].copy()
 			self.A.axpy(1.0/float(dt), self.matrix['Mij'], True)
 	    	
@@ -157,7 +157,7 @@ class Fluid_problem:
 		u_ab = self.u_ab; residual = self.residual
 		h_f = self.h_f; dx = self.dx; ds = self.ds
 
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			A1 = self.A1.copy()
 		else: 	
 			A1 = Fluid_problem.optimized_lhs(self, dt)
@@ -179,7 +179,7 @@ class Fluid_problem:
 		A1.axpy(1.0, d['Cij'], True)
 
 		# FSI lagrange multiplier
-		if problem_physics.get('solve_FSI') == True:
+		if problem_physics['solve_FSI'] == True:
 			for ui in range(self.u_components):
 				b1[ui].axpy(1.0, d['Yij'][ui]*Lm_f.sub(ui).vector())
 	

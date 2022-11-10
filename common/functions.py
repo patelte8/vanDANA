@@ -356,10 +356,10 @@ def calc_runtime_stats_timestep(Mpi, u, u_components, t, tsp, text_file_handles,
     if Mpi.get_rank() == 0:
         text_file_handles[1].write(f"{t}    {tsp}     {C_no_real}     {local_Re}\n")
 
-    if time_control.get('adjustable_timestep') == True:
+    if time_control['adjustable_timestep'] == True:
 
-        if C_no_real > time_control.get('C_no'):
-            tsp = round_decimals_down((0.25*time_control.get('C_no') + 0.75*C_no_real)/DN, 5)
+        if C_no_real > time_control['C_no']:
+            tsp = round_decimals_down((0.25*time_control['C_no'] + 0.75*C_no_real)/DN, 5)
         if tsp <= tsp_min:
             tsp = round_decimals_down(tsp_min, 5)     
 
@@ -382,7 +382,7 @@ def update_variables(update, u_components, problem_physics):
     T_[2].assign(T_[1])
     T_[1].assign(T_[0])
 
-    if problem_physics.get('solve_FSI') == True:
+    if problem_physics['solve_FSI'] == True:
 
         Dp_ = update[3]
         Lm_ = update[4]
@@ -390,7 +390,7 @@ def update_variables(update, u_components, problem_physics):
         Dp_[2].assign(Dp_[1])
         Lm_[1].assign(Lm_[0])
 
-        if problem_physics.get('solve_temperature') == True:
+        if problem_physics['solve_temperature'] == True:
 
             Ts_   = update[5]
             LmTs_ = update[6]    

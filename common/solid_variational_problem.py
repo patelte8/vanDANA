@@ -27,11 +27,11 @@ class Solid_problem:
 		mesh = solid_mesh_R.mesh
 		dim = mesh.geometry().dim()
 
-		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree.get('displacement_degree'))        
-		T1 = FiniteElement('P', mesh.ufl_cell(), fem_degree.get('pressure_degree'))                          # Solid pressure 
-		R  = FunctionSpace(mesh, R1)                                                                         # Solid displacement
+		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree['displacement_degree'])        
+		T1 = FiniteElement('P', mesh.ufl_cell(), fem_degree['pressure_degree'])                          # Solid pressure 
+		R  = FunctionSpace(mesh, R1)                                                                     # Solid displacement
 		X  = FunctionSpace(mesh, MixedElement([R1, T1]))
-		Z  = VectorFunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))                               # Lagrange multiplier 
+		Z  = VectorFunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])                               # Lagrange multiplier 
 
 		# --------------------------------
 
@@ -57,7 +57,7 @@ class Solid_problem:
 
 		# Body force
 		f = Constant((0,)*dim)
-		if problem_physics.get('body_force') == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
+		if problem_physics['body_force'] == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
 		
 		self.F = [R, X, Z]
 		self.f = f
@@ -90,7 +90,7 @@ class Solid_problem:
 			a5 = rho*(1/(dt*dt))*dot(D_, h)*dx + inner(nabla_grad(h).T, stress_inc(Dp_[0] + D_, ps_, Sm))*dx + dot(J(F(Dp_[0] + D_))-1, j)*dx
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], h)*dx + (rho-1)*dot(f, h)*dx      
 
-			if problem_physics.get('solve_FSI') == True:
+			if problem_physics['solve_FSI'] == True:
 				b5 += (1/dt)*dot(self.uf_, h)*dx - dot(self.Lm_, h)*dx	
 
 		# Define compressible solid problem	
@@ -98,7 +98,7 @@ class Solid_problem:
 			a5 = rho*(1/(dt*dt))*dot(Dp_[1], hc)*dx + inner(nabla_grad(hc).T, stress_c(Dp_[0] + Dp_[1], Ld, Sm))*dx 
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], hc)*dx + (rho-1)*dot(f, hc)*dx 
 
-			if problem_physics.get('solve_FSI') == True:
+			if problem_physics['solve_FSI'] == True:
 				b5 += (1/dt)*dot(self.uf_, hc)*dx - dot(self.Lm_, hc)*dx
 			
 		a5 -= b5

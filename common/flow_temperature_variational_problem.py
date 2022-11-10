@@ -24,12 +24,12 @@ class Fluid_temperature_problem:
 		
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
 		Pe = Re*Pr     
-		if not problem_physics.get('viscous_dissipation'): Ec = 0.0
+		if not problem_physics['viscous_dissipation']: Ec = 0.0
 
 		mesh = fluid_mesh.mesh
 		dim = mesh.geometry().dim()
 
-		G  = FunctionSpace(mesh, 'P', fem_degree.get('temperature_degree'), constrained_domain = constrained_domain)           # Fluid temperature
+		G  = FunctionSpace(mesh, 'P', fem_degree['temperature_degree'], constrained_domain = constrained_domain)           # Fluid temperature
 
 		# --------------------------------
 
@@ -74,7 +74,7 @@ class Fluid_temperature_problem:
 		d['Tij']  = assemble(Tp*ttf*dx, tensor=d['Tij'])
 		d['Wij']  = assemble((0.5/(Pe))*dot(nabla_grad(Tp), nabla_grad(ttf))*dx, tensor=d['Wij'])
 		
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			self.A4 = self.matrix['Wij'].copy()
 			self.A4.axpy(1.0/float(dt), self.matrix['Tij'], True)
 
@@ -93,7 +93,7 @@ class Fluid_temperature_problem:
 		Tp = self.Tp; ttf = self.ttf; h_f = self.h_f
 		dx = self.dx; ds = self.ds; pf = self.perf
 
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			A4 = self.A4.copy()
 		else:	
 			A4 = Fluid_temperature_problem.optimized_lhs(self, dt)
@@ -109,13 +109,13 @@ class Fluid_temperature_problem:
 		b4.axpy(-0.5, d['b4_R2ij'])
 		
 		# Viscous dissipation source
-		if problem_physics.get('viscous_dissipation') == True:
+		if problem_physics['viscous_dissipation'] == True:
 			Qij  = Qf(u, Ec, Re)*ttf*dx
 			d['b4_Qij'] = assemble(Qij, tensor=d['b4_Qij'])
 			b4.axpy(1.0, d['b4_Qij'])
 
 		# FSI temperature based lagrange multiplier
-		if problem_physics.get('solve_FSI') and problem_physics.get('solve_temperature') == True:
+		if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
 			b4.axpy(1.0, d['Tij']*LmTf_.vector())	
 
 		# Blood perfusion terms at boundary

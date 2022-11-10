@@ -58,7 +58,7 @@ def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
 
 	bcs = dict(velocity = bcu, pressure = bcp, streamfunction = bcPSI)
 
-	if problem_physics.get('solve_temperature') == True:
+	if problem_physics['solve_temperature'] == True:
 		# temperature
 		bcT_left = DirichletBC(V['fluid_temp'][0], Constant(1), boundaries, 1)
 		bcT_top = DirichletBC(V['fluid_temp'][0], Constant(0), boundaries, 4)

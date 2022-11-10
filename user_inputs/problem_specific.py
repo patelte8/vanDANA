@@ -8,8 +8,8 @@ from utilities.read import read_boundary_conditions
 
 directory = os.path.dirname(os.path.abspath(__file__)) + '/'
 
-Lsc = characteristic_scales.get('Lsc')
-Vsc = characteristic_scales.get('Vsc')
+Lsc = characteristic_scales['Lsc']
+Vsc = characteristic_scales['Vsc']
 Tsc = Lsc/Vsc
 
 # # Cardiac cycle specifics

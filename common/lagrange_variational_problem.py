@@ -19,9 +19,9 @@ class Lagrange_multiplier_problem:
 		mesh = solid_mesh.mesh
 		dim = mesh.geometry().dim()
 
-		Y  = VectorFunctionSpace(mesh, 'P', fem_degree.get('displacement_degree'))                                             # Solid displacement
-		M  = FunctionSpace(mesh, 'P', fem_degree.get('pressure_degree'))                                                       # Solid pressure
-		Z2 = VectorFunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))                                                 # Lagrange multiplier
+		Y  = VectorFunctionSpace(mesh, 'P', fem_degree['displacement_degree'])                                             # Solid displacement
+		M  = FunctionSpace(mesh, 'P', fem_degree['pressure_degree'])                                                       # Solid pressure
+		Z2 = VectorFunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])                                                 # Lagrange multiplier
 
 		self.Lm = TrialFunction(Z2)
 		self.e  = TestFunction(Z2)
@@ -88,13 +88,13 @@ class Solid_temperature_lagrange_multiplier_problem:
 		rho, Spht, K, Ld, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
 		Pe = Re*Pr     
-		if not problem_physics.get('viscous_dissipation'): Ec = 0.0
+		if not problem_physics['viscous_dissipation']: Ec = 0.0
 
 		mesh = solid_mesh.mesh
 		dim = mesh.geometry().dim()
 
-		M = FunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))            		# Temperature based lagrange multiplier
-		S = FunctionSpace(mesh, 'P', fem_degree.get('temperature_degree'))				# Solid Temperature
+		M = FunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])            		# Temperature based lagrange multiplier
+		S = FunctionSpace(mesh, 'P', fem_degree['temperature_degree'])				# Solid Temperature
 		
 		# --------------------------------
 
@@ -135,7 +135,7 @@ class Solid_temperature_lagrange_multiplier_problem:
 		b7 = ((self.rho*self.Spht)-1)*(1/dt)*(Ts_[0] - Ts_[1])*ls*dx + ((0.5*(self.K-1))/(self.Pe))*dot(nabla_grad(Ts_[0]) + nabla_grad(Ts_[1]), nabla_grad(ls))*dx 
 
 		# Viscous dissipation source
-		if problem_physics.get('viscous_dissipation') == True:
+		if problem_physics['viscous_dissipation'] == True:
 
 			b7 += Qf(uf_, self.Ec, self.Re)*ls*dx
 			
