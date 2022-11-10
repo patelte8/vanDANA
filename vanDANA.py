@@ -429,7 +429,7 @@ def vanDANA_solver(args):
 	    timer_sm.start()
 	    if problem_physics['solve_FSI'] == True:
 	        
-	        Mv.vector().zero(); Mv.vector()[:] = Dp_[1].vector().get_local()[:]
+	        Mv.vector().zero(); vector_assign_in_parallel(Mv, Dp_[1])
 	        ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
 	        solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
 	        lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)

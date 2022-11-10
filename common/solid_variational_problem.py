@@ -81,8 +81,8 @@ class Solid_problem:
 		rho = self.rho; Ld = self.Ld; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
 
-		self.uf_.vector()[:] = uf_.vector().get_local()[:]
-		self.Lm_.vector()[:] = Lm_.vector().get_local()[:]
+		vector_assign_in_parallel(self.uf_, uf_)
+		vector_assign_in_parallel(self.Lm_, Lm_)
 
 		# Define incompressible solid problem
 		if compressible_solid == False:

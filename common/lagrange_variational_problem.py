@@ -51,7 +51,7 @@ class Lagrange_multiplier_problem:
 
 		e = self.e; Lm = self.Lm; dx = self.dx
 
-		self.us_.vector()[:] = us_.vector().get_local()[:]
+		vector_assign_in_parallel(self.us_, us_)
 
 		a6 = assemble(dot(Lm, e)*dx)
 		b6 = assemble((1/dt)*dot(self.us_ - uf_, e)*dx + dot(Lm_[1], e)*dx)
