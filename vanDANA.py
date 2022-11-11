@@ -339,10 +339,10 @@ def vanDANA_solver(args):
 	    if problem_physics['solve_FSI'] == True:    
 	        a5 = solid.assemble_solid_problem(problem_physics['compressible_solid'], Dp_, mix, uf_, Lm_[1], dt)
 	        try:
-	        	solid.solve_solid_displacement(problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+	        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 	        except:
 	        	solid.change_initial_guess(Dp_[1], mix)	        		        	
-	        	solid.solve_solid_displacement(problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+	        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 
 	        Dp_[0].vector().axpy(1.0, Dp_[1].vector())
 	        solid.compute_jacobian(J_, Dp_[0])
