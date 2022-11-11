@@ -26,7 +26,8 @@ class MPI_Manage:
     def __init__(self):
         
         self.mpi_comm = MPI.comm_world
-        self.my_rank = MPI.rank(self.mpi_comm)
+        self.my_rank  = MPI.rank(self.mpi_comm)
+        self.size     = MPI.size(self.mpi_comm)
 
     def get_rank(self):
         
