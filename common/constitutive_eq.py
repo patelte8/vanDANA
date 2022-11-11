@@ -9,21 +9,17 @@ def sigma(Re, u, p):
 # Define solid stress : incompressible
 def stress_inc(D_R, ps_R, Sm): 
     
-    B = D_R
-    return -1*ps_R*inv(F(B)) + Sm*(F(B).T - inv(F(B)))
+    return -1*ps_R*inv(F(D_R)) + Sm*(F(B).T - inv(F(D_R)))
 
 # Define solid stress matrix : compressible
 def stress_c(D_R, Ld, Sm): 
     
-    B = D_R
-    return Ld*ln(J(F(B)))*inv(F(B)) + Sm*(F(B).T - inv(F(B)))    
+    return Ld*ln(J(F(D_R)))*inv(F(D_R)) + Sm*(F(D_R).T - inv(F(D_R)))    
 
 # Deformation gradient
 def F(x):
     
-    a = x.geometric_dimension()
-    I = Identity(a)
-    F = I + nabla_grad(x)
+    F = Identity(x.geometric_dimension()) + nabla_grad(x)
     return F
 
 # Jacobian
