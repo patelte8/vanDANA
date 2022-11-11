@@ -472,8 +472,8 @@ def vanDANA_solver(args):
 
 	Mpi.set_barrier() 
 	if Mpi.get_rank() == 0: 
-	    text_file_handles[3].write("{} {} {}".format("\n\n", "DOFs -->", json.dumps(DOFS)))
-	    text_file_handles[3].write("{} {} {}".format("\n", "Total number of tasks : ", Mpi.size))
+	    text_file_handles[3].write("{} {} {}".format("\n", "DOFs -->", json.dumps(DOFS)))
+	    text_file_handles[3].write("{} {} {}".format("\n\n", "Total number of tasks : ", Mpi.size))
 	    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total simulation wall time : ", wall_time, " sec"))
 	    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total intitial memory usage for setting up & assembly of the problem : ", initial_memory_use, "MB (RSS)"))
 	    text_file_handles[3].write("{} {} {} {} {}".format("\n\n", "Total memory usage of solver : ", str(memory.memory - initial_memory_use), "MB (RSS)", "\n\n\n"))
