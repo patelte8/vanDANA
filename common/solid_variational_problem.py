@@ -128,7 +128,7 @@ class Solid_problem:
 		
 		Dp_.vector().zero()
 		assign(mix.sub(1), interpolate(Constant(0), mix.sub(1).function_space().collapse()))
-		assign(mix.sub(0), interpolate(Expression(('0.0', '0.0', '0.0'), degree = 2), mix.sub(0).function_space().collapse()))	
+		assign(mix.sub(0), interpolate(Expression(('0.0', '0.0'), degree = 2), mix.sub(0).function_space().collapse()))	
 
 	def compute_jacobian(self, J_, Dp):
 
