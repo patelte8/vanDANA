@@ -6,10 +6,10 @@ import csv
 
 class get_mesh:
 
-	def __init__(self, directory, filename):
+	def __init__(self, mpi_comm, directory, filename):
 
-		mesh = Mesh()		
-		hdf = HDF5File(mesh.mpi_comm(), directory + filename, "r")		
+		mesh = Mesh(mpi_comm)		
+		hdf = HDF5File(mpi_comm, directory + filename, "r")		
 		hdf.read(mesh, "/mesh", False)
 		
 		self.hdf = hdf
@@ -103,7 +103,7 @@ def extract_hdf5_data_for_xdmf_visualization(mpi_comm, curr_dir, bool_stream, pr
 def extract_hdf5_to_xdmf(mpi_comm, directory, filename, meshfile, deg_FS, fieldvariable, c, rewrite_mesh):
 
 	mesh = Mesh(mpi_comm)
-	hdf_mesh = HDF5File(mesh.mpi_comm(), directory + "user_inputs/" + meshfile , "r")
+	hdf_mesh = HDF5File(mpi_comm, directory + "user_inputs/" + meshfile , "r")
 	hdf_mesh.read(mesh,"/mesh",False)
 	del hdf_mesh
 
@@ -126,7 +126,7 @@ def extract_hdf5_to_xdmf(mpi_comm, directory, filename, meshfile, deg_FS, fieldv
 		nm = 'HDF5_files_' + str(k)
 		if nm in listdir(directory + "results/"):
 
-			hdf = HDF5File(mesh.mpi_comm(), directory + "results/" + nm + "/" + filename + "_.h5", "r")
+			hdf = HDF5File(mpi_comm, directory + "results/" + nm + "/" + filename + "_.h5", "r")
 			if hdf.has_dataset(fieldvariable):
 				attr = hdf.attributes(fieldvariable)
 				nsteps = attr['count']
