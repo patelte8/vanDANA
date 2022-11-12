@@ -56,14 +56,14 @@ def vanDANA_solver(args):
 
 	# Read meshes
 	mesh_path = path.join(curr_dir, "user_inputs/")
-	fluid_mesh = get_mesh(mesh_path, "file_f.h5")
+	fluid_mesh = get_mesh(Mpi.mpi_comm, mesh_path, "file_f.h5")
 	hmax_f = Mpi.Max(fluid_mesh.mesh.hmax()); hmin_f = Mpi.Min(fluid_mesh.mesh.hmin())
 
 	if problem_physics['solve_FSI'] == True:
 	    mesh_path = path.join(curr_dir, "user_inputs/"); mesh_file = "file_s.h5"
 
-	    solid_mesh = get_mesh(mesh_path, mesh_file)
-	    solid_mesh_R = get_mesh(mesh_path, mesh_file)
+	    solid_mesh = get_mesh(Mpi.mpi_comm, mesh_path, mesh_file)
+	    solid_mesh_R = get_mesh(Mpi.mpi_comm, mesh_path, mesh_file)
 	    hmax_s = Mpi.Max(solid_mesh_R.mesh.hmax()); hmin_s = Mpi.Min(solid_mesh_R.mesh.hmin()) 
 
 	# Problem dimension
