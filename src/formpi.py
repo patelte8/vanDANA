@@ -9,7 +9,7 @@ subdomains = MeshFunction("size_t", mesh, "LA_CB_physical_region.xml")
 # scaling_factor = 0.0001
 # x[:, :] *= scaling_factor
 
-hdf = HDF5File(mesh.mpi_comm(), "file_f.h5", "w")
+hdf = HDF5File(MPI.comm_world, "file_f.h5", "w")
 hdf.write(mesh, "/mesh")
 hdf.write(boundaries, "/boundaries")
 hdf.write(subdomains, "/subdomains")
