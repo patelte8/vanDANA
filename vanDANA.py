@@ -345,7 +345,7 @@ def vanDANA_solver(args):
 	        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 
 	        Dp_[0].vector().axpy(1.0, Dp_[1].vector())
-	        solid.compute_jacobian(J_, Dp_[0])
+	        # solid.compute_jacobian(J_, Dp_[0])
 
 	        us_.vector().zero()
 	        us_.vector().axpy(1/float(dt), Dp_[1].vector())
@@ -408,7 +408,7 @@ def vanDANA_solver(args):
 		        if problem_physics['solve_temperature'] == True: 
 		        	flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
 		        if problem_physics['solve_FSI'] == True:
-		        	solid.post_process_data(Mpi, us_, ps_, t, text_file_handles)
+		        	solid.post_process_data(Mpi, us_, ps_, Dp_[0], t, text_file_handles)
 		        	lagrange.post_process_data(Mpi, Lm_[0], t, text_file_handles)
 			        if problem_physics['solve_temperature'] == True:	
 			        	solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
