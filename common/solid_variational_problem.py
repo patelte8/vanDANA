@@ -187,14 +187,15 @@ class Solid_problem:
 
 
 	# Compute drag and lift	(Note to self: written as per 2D cylinder)
-	def	post_process_data(self, Mpi, u, p, t, text_file_handles):
+	def	post_process_data(self, Mpi, u, p, Dp, t, text_file_handles):
 
 		ds = self.ds; n = self.n
 
 		traction = -1*dot(sigma(self.Re, u, p), n)
 		drag = 2*assemble(dot(traction, self.nx)*ds)
 		lift = 2*assemble(dot(traction, self.ny)*ds)
+		jacb = assemble(J(F(Dp))*dx)
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[5].write("{} {} {} {} {} {}".format(t, "  ", drag, "  ", lift, "\n")) 
+		    text_file_handles[5].write("{} {} {} {} {} {} {} {}".format(t, "  ", drag, "  ", lift, "  ", jacb, "\n"))  
