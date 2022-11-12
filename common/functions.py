@@ -322,7 +322,7 @@ def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
 # Divergence of a vector
 def divergence(u, u_components):
     
-    DIV = 0
+    DIV = 0.0
     for ui in range(u_components): DIV += u[ui].dx(ui) 
     return DIV
 
