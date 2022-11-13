@@ -3,7 +3,7 @@ from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
 from .solver_options import solid_displacement_parameters, FFC_parameters, \
-							solid_displacement_custom_solver_parameters
+							solid_displacement_custom_solver_parameters, solid_momentum_solver
 from .constitutive_eq import *
 import sys
 
@@ -43,7 +43,7 @@ class CustomSolver(NewtonSolver):
     def solver_setup(self, A, P, problem, iteration):
         self.linear_solver().set_operator(A)
 
-        PETScOptions.set("ksp_type", "cg")
+        PETScOptions.set("ksp_type", solid_momentum_solver['solver_type'])
         # PETScOptions.set("ksp_monitor_true_residual")
         # PETScOptions.set("ksp_view")
         PETScOptions.set("ksp_rtol", 1.0e-5)
