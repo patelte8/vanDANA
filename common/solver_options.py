@@ -29,8 +29,12 @@ energy_conservation_solver=dict(
     solver_type='bicgstab',
     preconditioner_type='jacobi')
 
-solid_displacement_parameters = {"newton_solver":{"linear_solver":'cg',"preconditioner":'hypre_amg', "report":True, "error_on_nonconvergence":True,\
-                                                  "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":50}}
+solid_momentum_solver=dict(
+    solver_type='cg',
+    preconditioner_type='hypre_amg')
+
+solid_displacement_parameters = {"newton_solver":{"linear_solver":solid_momentum_solver['solver_type'], "preconditioner":solid_momentum_solver['preconditioner_type'], "report":True, \
+                                                  "error_on_nonconvergence":True, "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":50}}
 
 # used only if its a custom newtons solver for compressible solid 
 solid_displacement_custom_solver_parameters = {"absolute_tolerance":1e-15, "relative_tolerance":1e-6, "convergence_criterion":'residual', \
