@@ -158,7 +158,7 @@ class Fluid_problem:
 		h_f = self.h_f; dx = self.dx; ds = self.ds
 
 		if time_control['adjustable_timestep'] == False:
-			A1 = self.A1.copy()
+			A1 = self.A.copy()
 		else: 	
 			A1 = Fluid_problem.optimized_lhs(self, dt)
 
