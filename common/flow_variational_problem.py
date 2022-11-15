@@ -130,8 +130,8 @@ class Fluid_problem:
 				d['Yij'][ui] = assemble(dot(self.Lm1[ui], v)*dx, tensor=d['Yij'][ui])                       # Lagrange-multiplier matrix
 
 		if time_control['adjustable_timestep'] == False:
-			self.A = self.matrix['Kij'].copy()
-			self.A.axpy(1.0/float(dt), self.matrix['Mij'], True)
+			self.A1 = self.matrix['Kij'].copy()
+			self.A1.axpy(1.0/float(dt), self.matrix['Mij'], True)
 	    	
 		self.A2 = assemble(dot(nabla_grad(p), nabla_grad(q))*dx)
 		if bcs['pressure'] == []:
@@ -158,7 +158,7 @@ class Fluid_problem:
 		h_f = self.h_f; dx = self.dx; ds = self.ds
 
 		if time_control['adjustable_timestep'] == False:
-			A1 = self.A.copy()
+			A1 = self.A1.copy()
 		else: 	
 			A1 = Fluid_problem.optimized_lhs(self, dt)
 
