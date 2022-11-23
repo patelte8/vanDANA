@@ -160,14 +160,16 @@ class Solid_problem:
 
 		elif compressible_solid == True:
 
-			J = derivative(a5, Dp_)
-			momentum = Solid_momentum(J, a5, bcs)
-			custom_solver = CustomSolver(mesh)
-			custom_solver.parameters.update(solid_displacement_custom_solver_parameters)
-			custom_solver.solve(momentum, Dp_.vector())
+			if custom_newtons_solver == True:
+				J = derivative(a5, Dp_)
+				momentum = Solid_momentum(J, a5, bcs)
+				custom_solver = CustomSolver(mesh)
+				custom_solver.parameters.update(solid_displacement_custom_solver_parameters)
+				custom_solver.solve(momentum, Dp_.vector())
 
-			# solve(a5 == 0, Dp_, bcs, solver_parameters = solid_displacement_parameters,
-			# 							form_compiler_parameters = FFC_parameters)
+			else:
+				solve(a5 == 0, Dp_, bcs, solver_parameters = solid_displacement_parameters,
+				      					form_compiler_parameters = FFC_parameters)
 
 			# Note to self: if it's a compressible solid, solid pressure is the same as fluid pressure
 			ps_.assign(interpolate_nonmatching_mesh(p_, mix.sub(1).function_space().collapse()))
