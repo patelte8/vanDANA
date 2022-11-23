@@ -12,6 +12,8 @@ krylov_solvers=dict(
     maximum_iterations=300,
     absolute_tolerance=1e-8)
 
+custom_newtons_solver = True
+
 # Solver dictionaries
 tentative_velocity_solver=dict(
     solver_type='bicgstab',
@@ -30,7 +32,10 @@ energy_conservation_solver=dict(
     preconditioner_type='jacobi')
 
 solid_momentum_solver=dict(
-    solver_type='cg')
+    solver_type='bicgstab')
+
+if custom_newtons_solver == True:
+    solid_momentum_solver.update(solver_type='bcgs')
 
 # -----------------------------------------------------------------------------------------
 
