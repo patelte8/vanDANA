@@ -1,0 +1,25 @@
+#!/bin/bash
+ 
+#SBATCH --job-name=slurm-vanDANA
+#SBATCH --nodes=1        
+#SBATCH --ntasks-per-node=84
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=1G
+#SBATCH --time=00:04:59
+#SBATCH --constraint=amr
+#SBATCH --mail-user=patelte6@msu.edu                
+#SBATCH --mail-type=FAIL,END
+#SBATCH --chdir=/mnt/home/patelte6/fenics_FSI_2017.1.0/vanDANA
+#SBATCH --output=%x-%j.out
+
+srun -n 84 singularity exec ../fenics_2019_dev.img python3 vanDANA.py
+
+if [ ! -f ./results/text_files/complete.txt ]; then 
+	srun -n 84 singularity exec ../fenics_2019_dev.img python3 vanDANA.py -restart=True
+fi
+
+seff $SLURM_JOBID
+mv slurm-vanDANA-$SLURM_JOBID.out results/
+
+
+
