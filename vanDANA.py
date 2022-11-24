@@ -486,10 +486,10 @@ def vanDANA_solver(args):
 	for y,z in hdf5_file_handles.items():
 	    z.close(); del z
 
-	complete = io.TextIOWrapper(open(curr_dir + "results/text_files/complete.txt", "wb", 0), write_through=True)
 	if t >= T and Mpi.get_rank() == 0:
+		complete = io.TextIOWrapper(open(curr_dir + "results/text_files/complete.txt", "wb", 0), write_through=True)
 		complete.seek(0); complete.write("{}".format("COMPLETED"))
-	complete.close()	    
+		complete.close()	    
 
 	# ---------------------------------------------------------------------------------     
 
