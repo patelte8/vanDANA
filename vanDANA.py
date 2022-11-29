@@ -237,7 +237,7 @@ def vanDANA_solver(args):
 	# Move solid_mesh to restart position before starting simulation
 	if restart and problem_physics['solve_FSI'] == True:
 	    print(RED % "Translate initial mesh to restart position\n", flush = True)
-	    Mv.vector().zero(); Mv.vector()[:] = Dp_[0].vector().get_local()[:]
+	    Mv.vector().zero(); vector_assign_in_parallel(Mv, Dp_[0])
 	    ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
 	    solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
 	    lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
