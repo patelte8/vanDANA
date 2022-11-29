@@ -69,7 +69,7 @@ class Fluid_problem:
 		self.A3 = None
 		self.null_space = VectorSpaceBasis([])
 		self.matrix = dict(Mij=None, Kij = None, Sij = None, Bij = None, Pij = None, Yij = None, \
-						A1_as1 = None, A1_SCW1 = None, A1_SLS1 = None, A1_Cij = None, BS = None, b1_Ls1 = None, , b2 = None)
+						A1_as1 = None, A1_SCW1 = None, A1_SLS1 = None, A1_Cij = None, BS = None, b1_Ls1 = None, b2 = None)
 		self.f = f
 		self.dim = dim
 		self.variables = variables
