@@ -213,11 +213,10 @@ def attach_nullspace(Ap, x_, Q):
 
 
 # Function to calculate denominator for courant number
-def DENO(u_, Mpi, h_f_X):
+def DENO(u_, Mpi, mesh, h_f_X):
 
     DN_local = 0
     NM_local = 0
-    mesh = u_.function_space().mesh()
     vertex_values_h_f_X = h_f_X.compute_vertex_values(mesh)
     vertex_mag_u = np.zeros(len(vertex_values_h_f_X))
 
@@ -234,6 +233,11 @@ def DENO(u_, Mpi, h_f_X):
     return DN, NM
 
 
+# Function to assign-vector in MPI
+def vector_assign_in_parallel(v, w):
+
+    v.vector().set_local(w.vector().get_local()[:])
+    v.vector().apply("insert")
 
 
 # Degrees of freedom
@@ -262,15 +266,10 @@ def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
 
 # Other miscellaneous functions
 
-# symmetric gradient
-def epsilon(u):
-    
-    return sym(nabla_grad(u))
-
 # Viscous dissipation source term (for energy equation)
 def Qf(u, Ec, Re):
     
-    return inner(((2*Ec)/Re)*epsilon(u), nabla_grad(u))
+    return inner(((2*Ec)/Re)*sym(nabla_grad(u)), nabla_grad(u))
 
 # Perfusion equation (quadratic)
 def PFE(Tf_n): 
@@ -291,18 +290,23 @@ def round_decimals_down(number:float, decimals:int=8):
     return math.floor(number * factor) / factor
 
 # Calculate and print runtime statistics and update timestep
-def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, h_f_X, Re, time_control): 
+def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, time_control): 
 
     DN, NM = DENO(u, Mpi, h_f_X)
     C_no_real = DN*tsp
     local_Re = NM*float(Re) 
+    tsp_min = 0.125*hmin_f
 
     Mpi.set_barrier()
     if Mpi.get_rank() == 0:
         text_file_handles[1].write(f"{t}    {tsp}     {C_no_real}     {local_Re}\n")
 
-    if time_control.get('adjustable_timestep') == True:   
-        tsp = round_decimals_down(time_control.get('C_no')/DN, 5) 
+    if time_control['adjustable_timestep'] == True:
+
+        if C_no_real > time_control['C_no']:
+            tsp = round_decimals_down((0.25*time_control['C_no'] + 0.75*C_no_real)/DN, 5)
+        if tsp <= tsp_min:
+            tsp = round_decimals_down(tsp_min, 5) 
 
     return tsp    
 
@@ -322,7 +326,7 @@ def update_variables(update, problem_physics):
     T_[2].assign(T_[1])
     T_[1].assign(T_[0])
 
-    if problem_physics.get('solve_FSI') == True:
+    if problem_physics['solve_FSI'] == True:
 
         Dp_ = update[3]
         Lm_ = update[4]
@@ -330,7 +334,7 @@ def update_variables(update, problem_physics):
         Dp_[2].assign(Dp_[1])
         Lm_[1].assign(Lm_[0])
 
-        if problem_physics.get('solve_temperature') == True:
+        if problem_physics['solve_temperature'] == True:
 
             Ts_   = update[5]
             LmTs_ = update[6]    

@@ -20,19 +20,19 @@ class RegionOfInterest(SubDomain):
         return sqrt(((x[0] - 2.0)*(x[0] - 2.0)) + ((x[1] - 2.0)*(x[1] - 2.0))) < 0.5 + tol
 
 
-inflow_profile = Expression((('6.0*x[1]*(4.1 - x[1])/(4.1*4.1)', '0')), degree=2)
+parabolic_profile = Expression((('6.0*x[1]*(4.1 - x[1])/(4.1*4.1)', '0')), degree=2)
 
 class Point_pressure(SubDomain):
     def inside(self, x, on_boundary):
         return near(x[0], 4.2) and near(x[1], 5.) and near(x[2], 2.)
 
 # Boundary conditions
-def fluid_create_boundary_conditions(fluid_mesh, **V):
+def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
 
 	boundaries = fluid_mesh.get_mesh_boundaries()
 
 	# velocity
-	bcu_left = DirichletBC(V['fluid'][0], inflow_profile, boundaries, 1)
+	bcu_left = DirichletBC(V['fluid'][0], parabolic_profile, boundaries, 1)
 	bcu_bottom = DirichletBC(V['fluid'][0], Constant((0, 0)), boundaries, 2)
 	bcu_top = DirichletBC(V['fluid'][0], Constant((0, 0)), boundaries, 4)
 	bcu = [bcu_bottom, bcu_top, bcu_left]
@@ -47,7 +47,7 @@ def fluid_create_boundary_conditions(fluid_mesh, **V):
 
 	bcs = dict(velocity = bcu, pressure = bcp, streamfunction = bcPSI)
 
-	if problem_physics.get('solve_temperature') == True:
+	if problem_physics['solve_temperature'] == True:
 		# temperature
 		bcT_left = DirichletBC(V['fluid_temp'][0], Constant(1), boundaries, 1)
 		bcT_top = DirichletBC(V['fluid_temp'][0], Constant(0), boundaries, 4)

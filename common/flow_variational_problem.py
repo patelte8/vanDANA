@@ -5,7 +5,7 @@ from fenicstools import interpolate_nonmatching_mesh
 from .solver_options import u_solver, p_solver, \
 							u_solver_c
 from .constitutive_eq import *
-from .flow_stabilizations import *
+from .fem_stabilizations import *
 import sys
 
 sys.path.insert(0,  '..')
@@ -22,14 +22,14 @@ class Fluid_problem:
 	def __init__(self, fluid_mesh, bool_stream):
 		
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
-		if not problem_physics.get('viscous_dissipation'): Ec = 0.0
+		if not problem_physics['viscous_dissipation']: Ec = 0.0
 
 		mesh = fluid_mesh.mesh
 		dim = mesh.geometry().dim()
 		
-		V  = VectorFunctionSpace(mesh, 'P', fem_degree.get('velocity_degree'), constrained_domain = constrained_domain)		  # Fluid velocity   
-		Q  = FunctionSpace(mesh, 'P', fem_degree.get('pressure_degree'), constrained_domain = constrained_domain)		      	  # Fluid pressure
-		Z1 = VectorFunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))                                                  # Lagrange multiplier
+		V  = VectorFunctionSpace(mesh, 'P', fem_degree['velocity_degree'], constrained_domain = constrained_domain)		  # Fluid velocity   
+		Q  = FunctionSpace(mesh, 'P', fem_degree['pressure_degree'], constrained_domain = constrained_domain)		      	  # Fluid pressure
+		Z1 = VectorFunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])                                                  # Lagrange multiplier
 
 		# --------------------------------
 
@@ -49,14 +49,14 @@ class Fluid_problem:
 		variables.update(u_=u_, p_=p_, Lm_f=Lm_f)	
 			
 		vort, psi = Function(Q), Function(Q)
-		vort.vector()[:] = 0.0; psi.vector()[:] = 0.0
+		vort.vector().zero(); psi.vector().zero()
 		variables.update(vort=vort, psi=psi)
 
 		# --------------------------------
 
 		# Body force
 		f = Constant((0,)*dim)
-		if problem_physics.get('body_force') == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
+		if problem_physics['body_force'] == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
 		
 		# --------------------------------
 
@@ -69,13 +69,13 @@ class Fluid_problem:
 		self.A3 = None
 		self.null_space = VectorSpaceBasis([])
 		self.matrix = dict(Mij=None, Kij = None, Sij = None, Bij = None, Pij = None, Yij = None, \
-						A1_as1 = None, A1_SCW1 = None, A1_SLS1 = None, A1_Cij = None, BS = None, b1_Ls1 = None)
+						A1_as1 = None, A1_SCW1 = None, A1_SLS1 = None, A1_Cij = None, BS = None, b1_Ls1 = None, , b2 = None)
 		self.f = f
 		self.dim = dim
 		self.variables = variables
 		self.bool_stream = bool_stream
 		self.h_f = CellDiameter(mesh)
-		self.h_f_X = project(CellDiameter(mesh), Q)
+		self.h_f_X = project(self.h_f, FunctionSpace(mesh, 'P', 1))
 		
 		self.F = [V, Q, Z1]
 		self.dx = Measure("dx", domain=mesh)
@@ -105,11 +105,11 @@ class Fluid_problem:
 		d['Bij'] = assemble(dot(f, v)*dx, tensor=d['Bij'])                                            		# Body-force vector
 		d['Pij'] = assemble(dot(nabla_grad(p), v)*dx, tensor=d['Pij'])                                  	# Pressure-gradient matrix
 
-		if problem_physics.get('solve_FSI') == True:
+		if problem_physics['solve_FSI'] == True:
 			Lm1 = self.Lm1
 			d['Yij'] = assemble(dot(Lm1, v)*dx, tensor=d['Yij'])                                           # Lagrange-multiplier matrix
 
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			self.A1 = self.matrix['Kij'].copy()
 			self.A1.axpy(1.0/float(dt), self.matrix['Mij'], True)
 	    	
@@ -122,11 +122,11 @@ class Fluid_problem:
 		[bc.apply(self.A3) for bc in bcs['velocity']]
 
 		# Stabilization terms
-		if stabilization_parameters.get('stab_LSIC_NS') == True:
+		if stabilization_parameters['stab_LSIC_NS'] == True:
 			SLS1 = tau_lsic(Re)*nabla_div(u1)*nabla_div(v)*dx
 			d['A1_SLS1'] = assemble(SLS1, tensor=d['A1_SLS1'])
 
-		if stabilization_parameters.get('stab_backflow_NS') == True:
+		if stabilization_parameters['stab_backflow_NS'] == True:
 			d['BS'] = assemble(Constant(1e4)*dot((Identity(self.dim) - outer(n,n))*u1, v)*ds(2), tensor=d['BS'])	
 
 
@@ -147,7 +147,7 @@ class Fluid_problem:
 		u1 = self.u1; v = self.v; dx = self.dx
 		h_f = self.h_f; dx = self.dx; ds = self.ds
 
-		if time_control.get('adjustable_timestep') == False:
+		if time_control['adjustable_timestep'] == False:
 			A1 = self.A1.copy()
 		else: 	
 			A1 = Fluid_problem.optimized_lhs(self, dt)
@@ -165,11 +165,11 @@ class Fluid_problem:
 		A1.axpy(1.0, d['A1_Cij'], True)
 
 		# FSI lagrange multiplier
-		if problem_physics.get('solve_FSI') == True:
+		if problem_physics['solve_FSI'] == True:
 			b1.axpy(1.0, d['Yij']*Lm_f.vector())
 	
 		# Stabilization terms 
-		if stabilization_parameters.get('stab_SUPG_NS') == True: 
+		if stabilization_parameters['stab_SUPG_NS'] == True: 
 			R = Fluid_problem.residual_tentative_velocity(self, u1, u_[1], p_[1], Lm_f, dt)
 			S1 = tau(alpha, u_[1], h_f, Re, dt)*dot(R, Pop(u_[1], v))*dx
 			as1 = lhs(S1); Ls1 = rhs(S1)	    
@@ -178,16 +178,16 @@ class Fluid_problem:
 			A1.axpy(1.0, d['A1_as1'], True)
 			b1.axpy(1.0, d['b1_Ls1'])
 
-		if stabilization_parameters.get('stab_cross_NS') == True:
+		if stabilization_parameters['stab_cross_NS'] == True:
 			R = Fluid_problem.residual_tentative_velocity(self, u_[1], u_[2], p_[2], Lm_f, dt)
 			SCW1 = tau_cw(C_cw, u_[1], h_f, Re, R)*inner(Pop_CW(u_[1], u1), nabla_grad(v))*dx
 			d['A1_SCW1'] = assemble(SCW1, tensor=d['A1_SCW1'])
 			A1.axpy(1.0, d['A1_SCW1'], True)
 
-		if stabilization_parameters.get('stab_LSIC_NS') == True:
+		if stabilization_parameters['stab_LSIC_NS'] == True:
 		    A1.axpy(1.0, d['A1_SLS1'], True)
 
-		if stabilization_parameters.get('stab_backflow_NS') == True:
+		if stabilization_parameters['stab_backflow_NS'] == True:
 		    A1 += d['BS']
 
 		return A1, b1	        
@@ -222,15 +222,15 @@ class Fluid_problem:
 	def assemble_pressure_correction(self, u_, p_, Lm_f, dt):
 
 		p = self.p; q = self.q; dx = self.dx 
-		h_f = self.h_f; Re = self.Re
+		h_f = self.h_f; Re = self.Re; b2 = self.matrix['b2']
 	
 		L2 = dot(nabla_grad(p_[1]), nabla_grad(q))*dx - (1/dt)*div(u_[0])*q*dx
 		
-		if stabilization_parameters.get('stab_PSPG_NS') == True:
+		if stabilization_parameters['stab_PSPG_NS'] == True:
 			R = Fluid_problem.residual_tentative_velocity(self, u_[0], u_[1], p_[1], Lm_f, dt)
 			L2 -= tau(alpha, u_[0], h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
 		
-		b2 = assemble(L2)
+		b2 = assemble(L2, tensor=b2)
 		return b2
 
 	def solve_pressure_correction(self, x, b, bcs):

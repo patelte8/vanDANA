@@ -71,11 +71,11 @@ class Solid_problem:
 		mesh = solid_mesh_R.mesh
 		dim = mesh.geometry().dim()
 
-		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree.get('displacement_degree'))        
-		T1 = FiniteElement('P', mesh.ufl_cell(), fem_degree.get('pressure_degree'))                          # Solid pressure 
-		R  = FunctionSpace(mesh, R1)                                                                         # Solid displacement
+		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree['displacement_degree'])        
+		T1 = FiniteElement('P', mesh.ufl_cell(), fem_degree['pressure_degree'])                          # Solid pressure 
+		R  = FunctionSpace(mesh, R1)                                                                     # Solid displacement
 		X  = FunctionSpace(mesh, MixedElement([R1, T1]))
-		Z  = VectorFunctionSpace(mesh, 'P', fem_degree.get('lagrange_degree'))                               # Lagrange multiplier 
+		Z  = VectorFunctionSpace(mesh, 'P', fem_degree['lagrange_degree'])                               # Lagrange multiplier 
 
 		# --------------------------------
 
@@ -101,7 +101,7 @@ class Solid_problem:
 
 		# Body force
 		f = Constant((0,)*dim)
-		if problem_physics.get('body_force') == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
+		if problem_physics['body_force'] == True: f = Constant(((1/(Fr*Fr))*f_dir(dim)))	
 		
 		self.F = [R, X, Z]
 		self.f = f
@@ -125,8 +125,8 @@ class Solid_problem:
 		rho = self.rho; Ld = self.Ld; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
 
-		self.uf_.vector()[:] = uf_.vector().get_local()[:]
-		self.Lm_.vector()[:] = Lm_.vector().get_local()[:]
+		vector_assign_in_parallel(self.uf_, uf_)
+		vector_assign_in_parallel(self.Lm_, Lm_)
 
 		# Define incompressible solid problem
 		if compressible_solid == False:
@@ -134,7 +134,7 @@ class Solid_problem:
 			a5 = rho*(1/(dt*dt))*dot(D_, h)*dx + inner(nabla_grad(h).T, stress_inc(Dp_[0] + D_, ps_, Sm))*dx + dot(J(F(Dp_[0] + D_))-1, j)*dx
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], h)*dx + (rho-1)*dot(f, h)*dx      
 
-			if problem_physics.get('solve_FSI') == True:
+			if problem_physics['solve_FSI'] == True:
 				b5 += (1/dt)*dot(self.uf_, h)*dx - dot(self.Lm_, h)*dx	
 
 		# Define compressible solid problem	
@@ -142,13 +142,13 @@ class Solid_problem:
 			a5 = rho*(1/(dt*dt))*dot(Dp_[1], hc)*dx + inner(nabla_grad(hc).T, stress_c(Dp_[0] + Dp_[1], Ld, Sm))*dx 
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], hc)*dx + (rho-1)*dot(f, hc)*dx 
 
-			if problem_physics.get('solve_FSI') == True:
+			if problem_physics['solve_FSI'] == True:
 				b5 += (1/dt)*dot(self.uf_, hc)*dx - dot(self.Lm_, hc)*dx
 			
 		a5 -= b5
 		return a5	
 
-	def solve_solid_displacement(self, compressible_solid, a5, Dp_, mix, ps_, p_, bcs):
+	def solve_solid_displacement(self, mesh, compressible_solid, a5, Dp_, mix, ps_, p_, bcs):
 
 		if compressible_solid == False:
 		    solve(a5 == 0, mix, bcs, solver_parameters = solid_displacement_parameters,
@@ -181,7 +181,7 @@ class Solid_problem:
 		
 		Dp_.vector().zero()
 		assign(mix.sub(1), interpolate(Constant(0), mix.sub(1).function_space().collapse()))
-		assign(mix.sub(0), interpolate(Expression(('0.0', '0.0', '0.0'), degree = 2), mix.sub(0).function_space().collapse()))	
+		assign(mix.sub(0), interpolate(Expression(('0.0', '0.0'), degree = 2), mix.sub(0).function_space().collapse()))	
 
 	def compute_jacobian(self, J_, Dp):
 
@@ -189,14 +189,15 @@ class Solid_problem:
 
 
 	# Compute drag and lift	(Note to self: written as per 2D cylinder)
-	def	post_process_data(self, Mpi, u, p, t, text_file_handles):
+	def	post_process_data(self, Mpi, u, p, Dp, t, text_file_handles):
 
 		ds = self.ds; n = self.n
 
 		traction = -1*dot(sigma(self.Re, u, p), n)
 		drag = 2*assemble(dot(traction, self.nx)*ds)
 		lift = 2*assemble(dot(traction, self.ny)*ds)
+		jacb = assemble(J(F(Dp))*dx)
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[5].write("{} {} {} {} {} {}".format(t, "  ", drag, "  ", lift, "\n")) 
+		    text_file_handles[5].write("{} {} {} {} {} {} {} {}".format(t, "  ", drag, "  ", lift, "  ", jacb, "\n")) 

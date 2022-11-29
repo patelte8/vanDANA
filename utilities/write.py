@@ -176,14 +176,14 @@ def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_han
 
 	u = flow_variables['u_'][0]; p = flow_variables['p_'][0]; vort = flow_variables['vort']; psi = flow_variables['psi']
 
-	if problem_physics.get('solve_temperature') == True: 
+	if problem_physics['solve_temperature'] == True: 
 		T = flow_temp_variables['T_'][0]
 	
-	if problem_physics.get('solve_FSI') == True:
+	if problem_physics['solve_FSI'] == True:
 		Dp = solid_variables['Dp_'][0]; us = solid_variables['us_']; ps = solid_variables['ps_']; J = solid_variables['J_']
 		Lm = lagrange_variables['Lm_'][0]
 
-	if problem_physics.get('solve_FSI') and problem_physics.get('solve_temperature') == True:
+	if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
 		Ts = solid_temp_variables['Ts_'][0]	
 
 	# --------------------------------		
@@ -197,17 +197,17 @@ def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_han
 		hdf5_file_handles['vorticity'].write(vort, 'vorticity', t); hdf5_file_handles['vorticity'].flush()
 		hdf5_file_handles['stream_function'].write(psi, 'stream_function', t); hdf5_file_handles['stream_function'].flush()
 	
-	if problem_physics.get('solve_temperature') == True:
+	if problem_physics['solve_temperature'] == True:
 		hdf5_file_handles['T'].write(T, 'temperature', t); hdf5_file_handles['T'].flush()
 		
-	if problem_physics.get('solve_FSI') == True:
+	if problem_physics['solve_FSI'] == True:
 		hdf5_file_handles['Dp'].write(Dp, 'displacement', t); hdf5_file_handles['Dp'].flush()
 		hdf5_file_handles['us'].write(us, 'velocity_solid', t); hdf5_file_handles['us'].flush()
 		hdf5_file_handles['ps'].write(ps, 'pressure_solid', t); hdf5_file_handles['ps'].flush()
 		hdf5_file_handles['Lm'].write(Lm, 'lagrange-multiplier', t); hdf5_file_handles['Lm'].flush()
 		hdf5_file_handles['J'].write(J, 'Jacobian', t); hdf5_file_handles['J'].flush()
 		
-		if problem_physics.get('solve_temperature') == True:	    
+		if problem_physics['solve_temperature'] == True:	    
 			hdf5_file_handles['Ts'].write(Ts, 'temperature_solid', t); hdf5_file_handles['Ts'].flush()		
 
 	# --------------------------------		    	    
@@ -226,11 +226,11 @@ def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_han
 	    psi.rename('streamfunction', 'stream_function')			    
 	    xdmf_file_handles['stream_function'].write(psi, t); xdmf_file_handles['stream_function'].close()
 
-	if problem_physics.get('solve_temperature') == True:
+	if problem_physics['solve_temperature'] == True:
 		T.rename('temperature', 'temperature')
 		xdmf_file_handles['T'].write(T, t); xdmf_file_handles['T'].close()
 	   
-	if problem_physics.get('solve_FSI') == True:
+	if problem_physics['solve_FSI'] == True:
 		Dp.rename('displacement', 'displacement')
 		xdmf_file_handles['Dp'].write(Dp, t); xdmf_file_handles['Dp'].close()
 		us.rename('velocity_solid', 'velocity_solid')
@@ -242,6 +242,6 @@ def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_han
 		J.rename('Jacobian', 'Jacobian')
 		xdmf_file_handles['J'].write(J, t); xdmf_file_handles['J'].close()	
 		
-		if problem_physics.get('solve_temperature') == True:	
+		if problem_physics['solve_temperature'] == True:	
 			Ts.rename('temperature_solid', 'temperature_solid')
 			xdmf_file_handles['Ts'].write(Ts, t); xdmf_file_handles['Ts'].close()

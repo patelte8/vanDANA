@@ -82,21 +82,21 @@ def read_restart_files(directory, mpi_comm, file_handle, **restart_variables):
 
 def extract_hdf5_data_for_xdmf_visualization(mpi_comm, curr_dir, bool_stream, problem_physics, fem_degree):
 
-	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "u", "file_f.h5", fem_degree.get('velocity_degree'), "velocity", "v", False)
-	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "p", "file_f.h5", fem_degree.get('pressure_degree'), "pressure", "s", False)
+	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "u", "file_f.h5", fem_degree['velocity_degree'], "velocity", "v", False)
+	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "p", "file_f.h5", fem_degree['pressure_degree'], "pressure", "s", False)
 	
-	if problem_physics.get('solve_temperature') == True:
-		extract_hdf5_to_xdmf(mpi_comm, curr_dir, "T", "file_f.h5", fem_degree.get('temperature_degree'), "temperature", "s", False)
+	if problem_physics['solve_temperature'] == True:
+		extract_hdf5_to_xdmf(mpi_comm, curr_dir, "T", "file_f.h5", fem_degree['temperature_degree'], "temperature", "s", False)
 
 	if bool_stream == True:
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "vorticity", "file_f.h5", fem_degree.get('pressure_degree'), "vorticity", "s", False)
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "stream_function", "file_f.h5", fem_degree.get('pressure_degree'), "stream_function", "s", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "vorticity", "file_f.h5", fem_degree['pressure_degree'], "vorticity", "s", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "stream_function", "file_f.h5", fem_degree['pressure_degree'], "stream_function", "s", False)
 
-	if problem_physics.get('solve_FSI') == True:
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Dp", "file_s.h5", fem_degree.get('displacement_degree'), "displacement", "v", False)
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "us", "file_s.h5", fem_degree.get('displacement_degree'), "velocity_solid", "v", False)
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "ps", "file_s.h5", fem_degree.get('pressure_degree'), "pressure_solid", "s", False)
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "J", "file_s.h5", fem_degree.get('pressure_degree'), "Jacobian", "s", False)	
+	if problem_physics['solve_FSI'] == True:
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Dp", "file_s.h5", fem_degree['displacement_degree'], "displacement", "v", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "us", "file_s.h5", fem_degree['displacement_degree'], "velocity_solid", "v", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "ps", "file_s.h5", fem_degree['pressure_degree'], "pressure_solid", "s", False)
+	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "J", "file_s.h5", fem_degree['pressure_degree'], "Jacobian", "s", False)	
 
 
 
