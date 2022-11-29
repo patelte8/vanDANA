@@ -266,6 +266,11 @@ def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
 
 # Other miscellaneous functions
 
+# symmetric gradient
+def epsilon(u):
+    
+    return sym(nabla_grad(u))
+
 # Viscous dissipation source term (for energy equation)
 def Qf(u, Ec, Re):
     
