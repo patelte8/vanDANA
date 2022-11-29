@@ -2,7 +2,8 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import solid_displacement_parameters, FFC_parameters
+from .solver_options import solid_displacement_parameters, FFC_parameters, \
+							solid_displacement_custom_solver_parameters, solid_momentum_solver, custom_newtons_solver
 from .constitutive_eq import *
 import sys
 
@@ -14,6 +15,49 @@ from utilities.read import *
 
 PI = 3.14159265
 
+# --------------------------------------------------------------------
+
+class Solid_momentum(NonlinearProblem):
+    def __init__(self, J, F, bcs):
+        self.bilinear_form = J
+        self.linear_form = F
+        self.bcs = bcs
+        NonlinearProblem.__init__(self)
+
+    def F(self, b, x):
+        assemble(self.linear_form, tensor=b)
+        for bc in self.bcs:
+            bc.apply(b, x)
+
+    def J(self, A, x):
+        assemble(self.bilinear_form, tensor=A)
+        for bc in self.bcs:
+            bc.apply(A)
+
+
+class CustomSolver(NewtonSolver):
+    def __init__(self, mesh):
+        NewtonSolver.__init__(self, mesh.mpi_comm(),
+                              PETScKrylovSolver(), PETScFactory.instance())
+
+    def solver_setup(self, A, P, problem, iteration):
+        self.linear_solver().set_operator(A)
+
+        PETScOptions.set("ksp_type", solid_momentum_solver['solver_type'])
+        # PETScOptions.set("ksp_monitor_true_residual")
+        # PETScOptions.set("ksp_view")
+        PETScOptions.set("ksp_rtol", 1.0e-5)
+        PETScOptions.set("Ksp_atol", 1.0e-12)
+        PETScOptions.set("pc_type", "hypre")
+        PETScOptions.set('pc_hypre_type', 'boomeramg')
+        PETScOptions.set("pc_hypre_boomeramg_max_iter", 1)
+        PETScOptions.set("pc_hypre_boomeramg_cycle_type", "v")
+        PETScOptions.set("error_on_nonconvergence", True)
+        PETScOptions.set("maximum_iterations",  50)
+
+        self.linear_solver().set_from_options()
+
+# --------------------------------------------------------------------
 
 
 class Solid_problem:
@@ -115,8 +159,17 @@ class Solid_problem:
 		    ps_.vector()[:] = ps.vector().get_local()[:]         
 
 		elif compressible_solid == True:
-			solve(a5 == 0, Dp_, bcs, solver_parameters = solid_displacement_parameters,
-										form_compiler_parameters = FFC_parameters)
+
+			if custom_newtons_solver == True:
+				J = derivative(a5, Dp_)
+				momentum = Solid_momentum(J, a5, bcs)
+				custom_solver = CustomSolver(mesh)
+				custom_solver.parameters.update(solid_displacement_custom_solver_parameters)
+				custom_solver.solve(momentum, Dp_.vector())
+
+			else:
+				solve(a5 == 0, Dp_, bcs, solver_parameters = solid_displacement_parameters,
+				      					form_compiler_parameters = FFC_parameters)
 
 			# Note to self: if it's a compressible solid, solid pressure is the same as fluid pressure
 			ps_.assign(interpolate_nonmatching_mesh(p_, mix.sub(1).function_space().collapse()))

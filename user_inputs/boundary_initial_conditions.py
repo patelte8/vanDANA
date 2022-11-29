@@ -1,10 +1,6 @@
 from dolfin import DirichletBC, Constant, assign, Expression, interpolate, SubDomain, \
 					MeshFunction, sqrt, DOLFIN_EPS, near
-from .user_parameters import problem_physics
-import sys
-
-sys.path.insert(0,  '..')
-from utilities.read import get_mesh					
+from .user_parameters import problem_physics				
 
 class PeriodicDomain(SubDomain):
 

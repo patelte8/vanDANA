@@ -12,6 +12,8 @@ krylov_solvers=dict(
     maximum_iterations=300,
     absolute_tolerance=1e-8)
 
+custom_newtons_solver = True
+
 # Solver dictionaries
 tentative_velocity_solver=dict(
     solver_type='bicgstab',
@@ -29,8 +31,13 @@ energy_conservation_solver=dict(
     solver_type='bicgstab',
     preconditioner_type='jacobi')
 
-solid_displacement_parameters = {"newton_solver":{"linear_solver":'bicgstab',"preconditioner":'jacobi', "report":True, "error_on_nonconvergence":True,\
-                                                  "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":50}}
+solid_momentum_solver=dict(
+    solver_type='bicgstab')
+
+if custom_newtons_solver == True:
+    solid_momentum_solver.update(solver_type='bcgs')
+
+# -----------------------------------------------------------------------------------------    
 
 # Define tentative_velocity_solver
 precond = PETScPreconditioner(tentative_velocity_solver['preconditioner_type'])
@@ -53,6 +60,14 @@ u_solver_c.set_reuse_preconditioner(True)
 precond = PETScPreconditioner(energy_conservation_solver['preconditioner_type'])
 t_solver = PETScKrylovSolver(energy_conservation_solver['solver_type'], precond)
 t_solver.parameters.update(krylov_solvers)
+
+
+solid_displacement_parameters = {"newton_solver":{"linear_solver":solid_momentum_solver['solver_type'], "preconditioner":'hypre_amg', "report":True, \
+                                                  "error_on_nonconvergence":True, "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":50}}
+
+# used only if its a custom newtons solver for compressible solid 
+solid_displacement_custom_solver_parameters = {"absolute_tolerance":1e-15, "relative_tolerance":1e-6, "convergence_criterion":'residual', \
+                                               "maximum_iterations":50, "report":True, "error_on_nonconvergence":True}
 
 
 

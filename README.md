@@ -6,7 +6,7 @@ vanDANA is a highly efficient FEM Immersed Boundary (IB) based Flow-thermal FSI 
     <img src="/src/vanDANA.png" width="520px"> 
 </div>
 
-The FSI solver is based on the [Distibuted Langrange Multiplier based Fictiious Domain method](https://www.sciencedirect.com/science/article/pii/S0021999105000148) and is extended to deal with [heat transfer](https://www.sciencedirect.com/science/article/pii/S0021999106000167). The interpolation of variables is conducted using the smeared [delta-functions](https://www.sciencedirect.com/science/article/pii/S0021999109004136). Additionally, the flow solver has the option of using various stabilization schemes : SUPG, PSPG, LSIC and Crosswind; and the structure can be set as either incompressible/compressible.
+The FSI solver is based on the [Distibuted Langrange Multiplier based Fictitious Domain method](https://www.sciencedirect.com/science/article/pii/S0021999105000148) and is extended to deal with [heat transfer](https://www.sciencedirect.com/science/article/pii/S0021999106000167). The interpolation of variables is conducted using the smeared [delta-functions](https://www.sciencedirect.com/science/article/pii/S0021999109004136). Additionally, the flow solver has the option of using various stabilization schemes : SUPG, PSPG, LSIC and Crosswind; and the structure can be set as either incompressible/compressible.
 
 <p align="center">
     <img src="/src/turek_benchmark.gif" width="600" height="310"/>
