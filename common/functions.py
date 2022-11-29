@@ -297,7 +297,7 @@ def round_decimals_down(number:float, decimals:int=8):
 # Calculate and print runtime statistics and update timestep
 def calc_runtime_stats_timestep(Mpi, u, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, time_control): 
 
-    DN, NM = DENO(u, Mpi, h_f_X)
+    DN, NM = DENO(u, Mpi, mesh, h_f_X)
     C_no_real = DN*tsp
     local_Re = NM*float(Re) 
     tsp_min = 0.125*hmin_f
