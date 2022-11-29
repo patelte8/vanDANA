@@ -13,7 +13,7 @@ problem_physics = dict(
 				  compressible_solid = True,	# enter "True" if compressible: Also remember to specify compressibility (Ld)
 				  								# enter "False" if incompressible
 
-				  viscous_dissipation = True,	# Heat release due to viscous gradients 
+				  viscous_dissipation = False,	# Heat release due to viscous gradients 
 
 				  body_force = False,      		# Gravitational force (uniform volumetric force)								 
 				)
@@ -88,7 +88,7 @@ characteristic_scales = dict(
 time_control = dict(
 				 C_no = 0.35, 					# Maximum possible Courant number
 			   	 dt = 0.0025,  					# Time-step: constant throughout runtime if adjustable-timestep is "False"
-			   	 T = 80,						# Total runtime
+			   	 T = 100,						# Total runtime
 			   	 adjustable_timestep = True 	# Calculate time-step using max Courant no. during runtime: used to accelerate temporal solution
 			   )
 
