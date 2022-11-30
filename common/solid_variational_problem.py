@@ -47,7 +47,7 @@ class CustomSolver(NewtonSolver):
         # PETScOptions.set("ksp_monitor_true_residual")
         # PETScOptions.set("ksp_view")
         PETScOptions.set("ksp_rtol", 1.0e-5)
-        PETScOptions.set("Ksp_atol", 1.0e-12)
+        PETScOptions.set("Ksp_atol", 1.0e-15)
         PETScOptions.set("pc_type", "hypre")
         PETScOptions.set('pc_hypre_type', 'boomeramg')
         PETScOptions.set("pc_hypre_boomeramg_max_iter", 1)
