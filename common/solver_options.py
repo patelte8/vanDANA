@@ -12,7 +12,7 @@ krylov_solvers=dict(
     maximum_iterations=300,
     absolute_tolerance=1e-8)
 
-custom_newtons_solver = True
+custom_newtons_solver = False
 
 # Solver dictionaries
 tentative_velocity_solver=dict(
