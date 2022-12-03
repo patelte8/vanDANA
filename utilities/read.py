@@ -1,7 +1,7 @@
-from dolfin import Mesh, HDF5File, MeshFunction, \
+from dolfin import Mesh, HDF5File, MeshFunction, File, TimeSeries, \
 			VectorFunctionSpace, FunctionSpace, XDMFFile, Function, FunctionAssigner 
 import numpy as np
-from os import listdir
+from os import listdir, path, makedirs
 import csv
 
 class get_mesh:

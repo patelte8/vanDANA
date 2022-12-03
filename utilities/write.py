@@ -1,5 +1,5 @@
-from dolfin import XDMFFile, HDF5File
-from os import path, makedirs, listdir
+from dolfin import XDMFFile, HDF5File, TimeSeries
+from os import path, makedirs, listdir, remove
 from shutil import rmtree
 import io
 
