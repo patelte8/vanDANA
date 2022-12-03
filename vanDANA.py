@@ -466,7 +466,7 @@ def vanDANA_solver(args):
 
 	# ---------------------------------------------------------------------------------     
 
-	memory('Final memory use ')
+	memory('Final memory use')
 	print(RED % 'Total memory usage of solver = {} MB (RSS)'.format(str(memory.memory - initial_memory_use)), "\n", flush = True)    
 	wall_time = timer_total.stop()
 
