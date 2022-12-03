@@ -142,6 +142,35 @@ class create_result_folder:
 
 
 
+def write_time_series(directory, restart):
+
+	folder = path.join(directory, "results/mesh_files/")
+
+	if restart == False:
+		for k in range(0, 250):
+			nm = 'time_series_solid_current_mesh_' + str(k) + '.h5'			
+			if nm in listdir(folder):
+				try:
+					remove(path.join(folder, nm))
+					rmtree(path.join(folder, 'time_series_solid_current_mesh'))
+				except OSError:
+					pass
+			else:
+				break
+
+		file = path.join(folder, "time_series_solid_current_mesh_0")		
+
+	elif restart == True:
+		for k in range(1, 250):	
+			nm = 'time_series_solid_current_mesh_' + str(k) + '.h5'				
+			if nm not in listdir(folder):
+				file = path.join(folder, "time_series_solid_current_mesh_" + str(k))
+				break
+
+	timeseries = TimeSeries(file)
+	return timeseries
+
+
 
 def write_restart_files(directory, Mpi, file_handle, t, tsp, **restart_variables):
 

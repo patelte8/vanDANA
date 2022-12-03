@@ -61,6 +61,31 @@ def read_boundary_conditions(directory, file_name):
 
 
 
+def read_time_series(mpi_comm, directory):
+
+	mesh = Mesh(mpi_comm)
+
+	folder = path.join(directory, "results/mesh_files/")
+	try:
+	    makedirs(path.join(folder, 'time_series_solid_current_mesh/'), exist_ok = True)
+	except OSError:
+	    pass
+
+	pvd_file = File(path.join(folder, 'time_series_solid_current_mesh/') + 'solid_current_mesh.pvd')    
+
+	for k in range(0, 250):
+		nm = 'time_series_solid_current_mesh_' + str(k) + '.h5'
+		timeseries = TimeSeries(folder + 'time_series_solid_current_mesh_' + str(k))		
+		
+		if nm in listdir(folder):	
+			times = timeseries.mesh_times()
+			for tt in times:
+				timeseries.retrieve(mesh, tt)
+				pvd_file << (mesh, tt)
+		else:
+			break
+
+
 
 def read_restart_files(directory, mpi_comm, file_handle, **restart_variables):
 		
