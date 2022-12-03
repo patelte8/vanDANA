@@ -121,7 +121,7 @@ class Fluid_problem:
 				   inner(dot((0.5/Re)*nabla_grad(0.5*u1), n), v)*ds, tensor=d['Kij'])      	   				# Viscous matrix
 		
 		for ui in range(self.u_components):
-			d['Sij'][ui] = assemble(dot(p, v.dx(ui))*dx - dot(p*n[ui], v)*ds, tensor=d['Sij'][ui])      		# Pressure matrix
+			d['Sij'][ui] = assemble(dot(p, v.dx(ui))*dx - dot(p*n[ui], v)*ds, tensor=d['Sij'][ui])      	# Pressure matrix
 			d['Bij'][ui] = assemble(dot(f[ui], v)*dx, tensor=d['Bij'][ui])                                  # Body-force vector
 			d['Pij'][ui] = assemble(dot(p.dx(ui), v)*dx, tensor=d['Pij'][ui])                               # Pressure-gradient matrix
 
