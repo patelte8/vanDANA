@@ -116,9 +116,8 @@ class Fluid_problem:
 		u1 = self.u1; v = self.v; p = self.p; q = self.q
 		dx = self.dx; ds = self.ds; n = self.n; f = self.f
 		
-		d['Mij'] = self.A3 = assemble(inner(u1, v)*dx, tensor=d['Mij'])                                     # Mass matrix 
-		d['Kij'] = assemble(inner((0.5/Re)*nabla_grad(u1), nabla_grad(v))*dx - \
-				   inner(dot((0.5/Re)*nabla_grad(0.5*u1), n), v)*ds, tensor=d['Kij'])      	   				# Viscous matrix
+		d['Mij'] = self.A3 = assemble(dot(u1, v)*dx, tensor=d['Mij'])	                                     # Mass matrix 
+		d['Kij'] = assemble(dot((0.5/Re)*nabla_grad(u1), nabla_grad(v))*dx, tensor=d['Kij'])      	   				# Viscous matrix
 		
 		for ui in range(self.u_components):
 			d['Sij'][ui] = assemble(dot(p, v.dx(ui))*dx - dot(p*n[ui], v)*ds, tensor=d['Sij'][ui])      	# Pressure matrix
