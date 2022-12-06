@@ -106,7 +106,7 @@ class Fluid_problem:
 
 		# Convection matrix
 		self.u_ab = as_vector([Function(V) for ui in range(self.u_components)])    
-		self.Cij = inner(dot(self.u_ab, nabla_grad(self.u1)), self.v)*self.dx
+		self.Cij = dot(dot(self.u_ab, nabla_grad(self.u1)), self.v)*self.dx
 
 		# --------------------------------
 
