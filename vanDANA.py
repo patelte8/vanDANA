@@ -472,7 +472,7 @@ def vanDANA_solver(args):
 
 	# ---------------------------------------------------------------------------------     
 
-	except Exception as e: print(BLUE % 'error message : ', "\n", flush = True); print(e, flush = True)		
+	except Exception as e: print(BLUE % 'error message : ', flush = True); print(e, flush = True)		
 
 	else:
 
