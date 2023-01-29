@@ -22,7 +22,7 @@ A singularity build file is provided that will install necessary libraries & set
 
 1. Install singularity by following the instruction in [here](https://docs.sylabs.io/guides/3.6/admin-guide/installation.html).
 
-2. Build a singularity container using the [build file](./src/fenics_2019_dev) with
+2. Build a singularity container using the [build file](./src/fenics_2019_dev) by
 ```
 sudo singularity build <container_name>.img fenics_2019_dev
 ```
@@ -61,6 +61,6 @@ vanDANA is licensed under the GNU GPL, version 3 or any later version. vanDANA i
   
     (contact : patelte8@gmail.com)
 
-- Please report bugs and other issues through the issue tracker at:
+## Contribute
 
-    https://github.com/patelte8/vanDANA/issues
+Please report bugs and other issues through the issue tracker at: https://github.com/patelte8/vanDANA/issues. We welcome suggestions and if you wish to contribute/improve vanDANA solver, contact the author via mail.
