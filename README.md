@@ -61,6 +61,6 @@ vanDANA is licensed under the GNU GPL, version 3 or any later version. vanDANA i
   
     (contact : patelte8@gmail.com)
 
-## Contribution
+## Contribute
 
 Please report bugs and other issues through the issue tracker at: https://github.com/patelte8/vanDANA/issues. We welcome suggestions and if you wish to contribute/improve vanDANA solver, contact the author via mail.
