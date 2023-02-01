@@ -239,7 +239,7 @@ def mesh_smoothening(mesh):
                                  "krylov_solver":{"relative_tolerance":1e-4}})
 
     # Deform by displacement from variational problem and plot smoothed mesh:
-    ALE.move(mesh, project(uh, V))
+    ALE.move(mesh, uh)
         
     ratios = MeshQuality.radius_ratio_min_max(mesh)
     ratio_min = ratios[0]
