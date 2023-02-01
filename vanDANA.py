@@ -436,7 +436,7 @@ def vanDANA_solver(args):
 		    if problem_physics['solve_FSI'] == True:
 		        
 		        Mv.vector().zero(); vector_assign_in_parallel(Mv, Dp_[1])
-		        ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
+		        ALE.move(solid_mesh.mesh, Mv)
 		        solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
 		        lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
 		        if problem_physics['solve_temperature'] == True:
@@ -472,7 +472,7 @@ def vanDANA_solver(args):
 
 	# ---------------------------------------------------------------------------------     
 
-	except Exception as e: print(BLUE % 'error message : ', flush = True); print(e, flush = True)		
+	except Exception as e: print(BLUE % 'error message : ', flush = True); traceback.print_exc(file=sys.stdout) #; print(e, flush = True)		
 
 	else:
 
