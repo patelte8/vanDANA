@@ -8,7 +8,7 @@ import array as arr
 from fenicstools import *
 from distutils.util import strtobool
 import vtk_py3 as vtk_py3
-import math, os, operator, copy, sys, io, json, vtk, matplotlib, cppimport, argparse
+import math, os, operator, copy, sys, io, json, vtk, matplotlib, cppimport, argparse, traceback
 matplotlib.use('Agg')
 from matplotlib import rc, pylab as plt
 
