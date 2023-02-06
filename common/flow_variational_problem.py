@@ -214,7 +214,7 @@ class Fluid_problem:
 
 	    return b
 	
-	def change_initial_guess(u):
+	def change_initial_guess(self, u):
 
 		u.vector().zero()
 		
