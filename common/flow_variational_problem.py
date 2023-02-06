@@ -213,8 +213,11 @@ class Fluid_problem:
 	    b.axpy(1.0, self.matrix['Sij'][ui]*p.vector())
 
 	    return b
+	
+	def change_initial_guess(u):
 
-
+		u.vector().zero()
+		
 	def solve_tentative_velocity(self, A, x, b, bcs):
 	    
 		for ui in range(self.u_components):
