@@ -301,10 +301,10 @@ def vanDANA_solver(args):
 		    # print(BLUE % "1: Predict tentative velocity step", flush = True)
 		    A1, b1 = flow.assemble_tentative_velocity(u_, p_, Lm_f, dt)
 		    try:
-			flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
+				flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
 		    except:
-			flow.change_initial_guess(u_[0])
-			flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
+				flow.change_initial_guess(u_[0])
+				flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
 		    s1 += timer_s1.stop()
 
 		    timer_s2.start()
