@@ -216,7 +216,8 @@ class Fluid_problem:
 	
 	def change_initial_guess(self, u):
 
-		u.vector().zero()
+		for i in range(self.dim):
+			u[i].vector().zero()
 		
 	def solve_tentative_velocity(self, A, x, b, bcs):
 	    
