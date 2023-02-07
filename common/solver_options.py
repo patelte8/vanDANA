@@ -32,7 +32,7 @@ energy_conservation_solver=dict(
     preconditioner_type='jacobi')
 
 solid_momentum_solver=dict(
-    solver_type='bicgstab')
+    solver_type='bicgstab')                 # Use 'mumps' (direct solver), if solid is incompressible
 
 if custom_newtons_solver == True:
     solid_momentum_solver.update(solver_type='bcgs')
