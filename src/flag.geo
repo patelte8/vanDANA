@@ -1,7 +1,7 @@
 // Gmsh project created on Tue Oct 27 14:46:59 2020
 SetFactory("OpenCASCADE");
 
-X2 = 13;
+X2 = 10;
 X1 = X2*17;
 X4 = X2*3;
 X5 = X4*2 + X2;
