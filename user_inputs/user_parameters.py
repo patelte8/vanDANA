@@ -33,7 +33,6 @@ stabilization_parameters = dict(
 	SUPG_NS = False,							# explicit
 	PSPG_NS = False,							# explicit		
 	crosswind_NS = False,						# implicit
-	backflow_NS = False,					
 
 	# Energy-equation
 	SUPG_HT = False,							# explicit
