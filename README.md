@@ -5,7 +5,6 @@ vanDANA is a highly efficient FEM Immersed Boundary (IB) based Flow-thermal FSI 
 <div align="center">
     <img src="/src/vanDANA.png" width="520px"> 
 </div>
-
 ## License
 
 vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
