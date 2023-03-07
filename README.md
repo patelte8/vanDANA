@@ -52,7 +52,7 @@ Additonal documentation on setting up parameters for the code will be added soon
 
 ## License
 
-vanDANA is licensed under the GNU GPL, version 3 or any later version. vanDANA is Copyright (2022) by the authors.
+vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
 
 
 ## Authors
