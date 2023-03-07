@@ -1,7 +1,7 @@
 from dolfin import *
 from mshr import *
 
-mesh1 = RectangleMesh(Point(0.0, 0.0), Point(11, 4.1), 500, 185) 
+mesh1 = RectangleMesh(Point(0.0, 0.0), Point(11, 4.1), 575, 215) 
 
 
 class Left(SubDomain):
