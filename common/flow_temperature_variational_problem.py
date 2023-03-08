@@ -55,7 +55,7 @@ class Fluid_temperature_problem:
 		self.variables = variables
 		self.dx = Measure("dx", domain=mesh)
 		self.ds = Measure("ds", domain=mesh, subdomain_data=fluid_mesh.get_mesh_boundaries())
-		self.area_sphere = assemble(1*self.ds(7))
+		self.area_sphere = assemble(1*self.ds(4))
 
 		self.h_f  = CellDiameter(mesh)
 		self.n 	  = FacetNormal(mesh)
@@ -171,7 +171,7 @@ class Fluid_temperature_problem:
 		
 		# Compute average nusselt number
 		nusselt = dot(nabla_grad(T_[0]), n)
-		average_nusselt = assemble(nusselt*ds(7))/self.area_sphere
+		average_nusselt = assemble(nusselt*ds(4))/self.area_sphere
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
