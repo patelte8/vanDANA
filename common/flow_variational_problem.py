@@ -283,8 +283,8 @@ class Fluid_problem:
 
 		# Compute drag, lift (note to self : written as per 3D sphere)
 		traction = -1*dot(sigma(Re, u, p), n)
-		drag = assemble(dot(traction, self.nx)*ds(7))/(0.5*(PI)/4)
-		lift = assemble(dot(traction, self.ny)*ds(7))/(0.5*(PI)/4)
+		drag = assemble(dot(traction, self.nx)*ds(4))/(0.5*(PI)/4)
+		lift = assemble(dot(traction, self.ny)*ds(4))/(0.5*(PI)/4)
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
