@@ -57,9 +57,8 @@ vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by 
 
 ## Authors
 
-- Tejas Patel 
-  
-    (contact : patelte8@gmail.com, https://patelte8.github.io/cfd_gallery/)
+- Tejas Patel (contact : patelte8@gmail.com, https://patelte8.github.io/cfd_gallery/)
+- Kai Thin
 
 ## Contribute
 
