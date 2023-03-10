@@ -37,9 +37,8 @@ sudo singularity build <container_name>.img fenics_2019_dev
 
 4. The code can be run within the singularity container by simply running :
 ```
-mpirun.mpich -np <# processors> python3 vanDANA.py
+ mpirun.mpich -np <# processors> python3 vanDANA.py
 ```
-
 ## Organization of the code
 
 - [common](./common) module
