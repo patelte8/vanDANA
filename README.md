@@ -19,6 +19,12 @@ The FSI solver is based on the [Distibuted Langrange Multiplier based Fictitious
 
 vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
 
+## Organization of the code
+
+- [common](./common) module
+- [utilities](./utilities) module
+- [user_inputs](./user_inputs) module
+
 ## Installation and Running the code
 
 A singularity build file is provided that will install necessary libraries & setup the environment to run the code.
@@ -39,15 +45,10 @@ sudo singularity build <container_name>.img fenics_2019_dev
 ```
  mpirun.mpich -np <# processors> python3 vanDANA.py
 ```
-## Organization of the code
-
-- [common](./common) module
-- [utilities](./utilities) module
-- [user_inputs](./user_inputs) module
 
 ## Documentation
 
-For an introduction and tutorial to vanDANA code, please refer the [documentation](https://deepnote.com/@research-2834/vanDANA-User-Manual-dcbd70e8-f8a8-4cc9-84ba-10cbae5aa5a5).
+For an introduction and tutorial to vanDANA code, please refer to the [documentation](https://deepnote.com/@research-2834/vanDANA-User-Manual-dcbd70e8-f8a8-4cc9-84ba-10cbae5aa5a5).
 
 
 ## Authors
