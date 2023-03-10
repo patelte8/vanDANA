@@ -15,6 +15,9 @@ The FSI solver is based on the [Distibuted Langrange Multiplier based Fictitious
   The classical Turek benchmark (FSI2)
 </p>
 
+## License
+
+vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
 
 ## Installation and Running the code
 
@@ -34,10 +37,6 @@ sudo singularity build <container_name>.img fenics_2019_dev
 
 4. The code can be run within the singularity container by simply running :
 ```
-python3 vanDANA.py
-```
-or in parallel
-```
 mpirun.mpich -np <# processors> python3 vanDANA.py
 ```
 
@@ -47,12 +46,9 @@ mpirun.mpich -np <# processors> python3 vanDANA.py
 - [utilities](./utilities) module
 - [user_inputs](./user_inputs) module
 
-Additonal documentation on setting up parameters for the code will be added soon.
+## Documentation
 
-
-## License
-
-vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
+For an introduction and tutorial to vanDANA code, please refer the [documentation](https://deepnote.com/@research-2834/vanDANA-User-Manual-dcbd70e8-f8a8-4cc9-84ba-10cbae5aa5a5).
 
 
 ## Authors
