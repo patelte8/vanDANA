@@ -419,7 +419,7 @@ def vanDANA_solver(args):
 			        	flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
 			        if problem_physics['solve_FSI'] == True:
 			        	solid.post_process_data(Mpi, us_, ps_, Dp_[0], t, text_file_handles)
-			        	lagrange.post_process_data(Mpi, Lm_[0], t, text_file_handles)
+			        	lagrange.post_process_data(Mpi, Lm_[0], uf_, t, dt, text_file_handles)
 				        if problem_physics['solve_temperature'] == True:	
 				        	solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
 
