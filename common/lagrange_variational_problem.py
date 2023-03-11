@@ -64,12 +64,12 @@ class Lagrange_multiplier_problem:
 
 
 	# Compute drag and lift	(Note to self: written as per 2D cylinder)	
-	def	post_process_data(self, Mpi, Lm, t, text_file_handles):
+	def	post_process_data(self, Mpi, Lm, uf_, t, dt, text_file_handles):
 
 		dx = self.dx
 
-		drag = 2*assemble(dot(Lm, self.nx)*dx)
-		lift = 2*assemble(dot(Lm, self.ny)*dx)
+		drag = 2*assemble(dot(-1*Lm + uf_/dt, self.nx)*dx)
+		lift = 2*assemble(dot(-1*Lm + uf_/dt, self.ny)*dx)
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
