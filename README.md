@@ -50,7 +50,7 @@ sudo singularity build <container_name>.img fenics_2019_dev
 
 For an introduction and tutorial to vanDANA code, please refer to the [documentation](https://deepnote.com/@research-2834/vanDANA-User-Manual-dcbd70e8-f8a8-4cc9-84ba-10cbae5aa5a5).
 
-If you wish to use vanDANA for research, please cite this [article][https://doi.org/10.1016/j.compbiomed.2023.106766].
+If you wish to use vanDANA for research, please cite this [article](https://doi.org/10.1016/j.compbiomed.2023.106766).
 
 ## Authors
 
