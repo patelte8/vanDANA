@@ -40,7 +40,7 @@ for i in range(1, nor+1):
     # Selecting edges to refine
     class Border(SubDomain):
         def inside(self, x, on_boundary):
-            return True if bdry_distance(x) <= (dist/i) else False
+            return True if bdry_distance(x) <= (dist/i) else False # or (x[0]<5. and x[0]>-1. and x[1]<2. and x[1]>-2. and x[2]<0. and x[2]>-8.) 
 
     Border = Border()
 
