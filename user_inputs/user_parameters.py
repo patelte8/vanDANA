@@ -76,10 +76,10 @@ def calc_non_dimensional_solid_properties(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, 
 # ---------------------------------------------------------------------
 characteristic_scales = dict(
 	
-	Lsc = 1,			            # m          
-	Vsc = 1,	         		    # m/s
-	T0 = -1*52,						# lower_temp (C)
-	Tm = 37							# higher_temp (c)
+	Lsc = 1,			            			# m          
+	Vsc = 1,	         		    			# m/s
+	T0 = -1*52,									# lower_temp (C)
+	Tm = 37										# higher_temp (c)
 )
 
 # Temporal control
@@ -119,11 +119,11 @@ post_process = True
 # File printing / solid-remeshing control
 # ---------------------------------------------------------------------
 print_control = dict(
-                  a = 40,   # for printing variables and restart files
-                  b = 20,  	# for post processing data
-                  c = 20, 	# for simulation_wall_time text file
-                  d = 5,   	# for remeshing solid current-configuration mesh		
-                  e = 20    # for runtime_tsp_courant_no_stats text file	
+                  a = 40,   				# for printing variables and restart files
+                  b = 20,  					# for post processing data
+                  c = 20, 					# for simulation_wall_time text file
+                  d = 5,   					# for remeshing solid current-configuration mesh		
+                  e = 20    				# for runtime_tsp_courant_no_stats text file	
                 )
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
