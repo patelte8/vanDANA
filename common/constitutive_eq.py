@@ -39,11 +39,11 @@ def stress_lr_elastic_inc(D_R, ps_R, Sm):
     return (-1*ps_R + 2*Sm*E)*inv(B)  
 
 # Define solid stress : compressible
-def stress_lr_elastic_c(D_R, nw, Sm): 
+def stress_lr_elastic_c(D_R, Nw, Sm): 
     
     B = F(D_R)
     E = E(B, D_R.geometric_dimension())
-    lame1 = (2*Sm*nw)/(1-(2*nw))
+    lame1 = (2*Sm*Nw)/(1-(2*Nw))
 
     return (lame1*tr(E) + 2*Sm*E)*inv(B)
 

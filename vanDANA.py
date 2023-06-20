@@ -50,7 +50,7 @@ def vanDANA_solver(args):
 	Pe = Re*Pr     
 	if not problem_physics['viscous_dissipation'] : Ec = 0.0
 	if problem_physics['solve_FSI'] or problem_physics['solve_temperature'] == True:
-	    rho, Spht, K, Ld, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
+	    rho, Spht, K, Ld, Nw, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
 
 	# ---------------------------------------------------------------------------------   
 

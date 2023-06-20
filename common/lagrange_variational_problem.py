@@ -85,7 +85,7 @@ class Solid_temperature_lagrange_multiplier_problem:
 
 		# -------------------------------		
 
-		rho, Spht, K, Ld, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
+		rho, Spht, K, Ld, Nw, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
 		Pe = Re*Pr     
 		if not problem_physics['viscous_dissipation']: Ec = 0.0

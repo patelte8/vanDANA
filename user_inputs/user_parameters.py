@@ -13,6 +13,8 @@ problem_physics = dict(
 				  compressible_solid = True,	# enter "True" if compressible: Also remember to specify compressibility (Ld) or possions ratio (nw)
 				  								# enter "False" if incompressible
 
+				  solid_material = 'neoHookean',# options: 1. neoHookean 2. linearelastic								
+
 				  viscous_dissipation = False,	# Heat release due to viscous gradients 
 
 				  body_force = False,      		# Gravitational force (uniform volumetric force)								 
@@ -58,19 +60,21 @@ physical_parameters = dict(
 	rho_s = 10,									# Density (kg/m3)
 	Sm = 0,										# Shear modulus (N/m2)
 	Ld = 0,										# Compressibility (N/m2) ... only for neoHookean
+	nw = 0.4,									# Poissons ratio ... only for linearelastic
 	Spht_s = 0.11,								# Specific heat (J/kg.C)
 	K_s = 1.2 									# Thermal conductivity (W/m.C)
 )
 
-def calc_non_dimensional_solid_properties(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, Spht_s, K_s, Lsc, Vsc, T0, Tm, Tsc):
+def calc_non_dimensional_solid_properties(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, nw, Spht_s, K_s, Lsc, Vsc, T0, Tm, Tsc):
 
 	rho = rho_s/rho_f
 	Spht = Spht_s/Spht_f
 	K = K_s/K_f
 	Ld = 2000 # Ld/(rho_f*Vsc*Vsc)
+	Nw = nw
 	Sm = 500 # Sm/(rho_f*Vsc*Vsc)
 	
-	return rho, Spht, K, Ld, Sm
+	return rho, Spht, K, Ld, Nw, Sm
 
 # Characteristic scales
 # ---------------------------------------------------------------------

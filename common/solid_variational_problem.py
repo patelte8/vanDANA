@@ -65,7 +65,7 @@ class Solid_problem:
 	# Note to self : This problem is solved on the solid reference configuration
 	def __init__(self, solid_mesh_R):
 
-		rho, Spht, K, Ld, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
+		rho, Spht, K, Ld, Nw, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
 
 		mesh = solid_mesh_R.mesh
