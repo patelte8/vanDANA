@@ -107,7 +107,7 @@ fem_degree = dict(
 
 # Non-dimensional numbers
 # ---------------------------------------------------------------------
-def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, Spht_s, K_s, Lsc, Vsc, T0, Tm, Tsc):
+def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, nw, Spht_s, K_s, Lsc, Vsc, T0, Tm, Tsc):
 
 	Re = 100#rho_f*(Vsc*Lsc)/nu            
 	Pr = 1#(Spht_f*nu)/K_f 
