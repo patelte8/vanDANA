@@ -10,7 +10,7 @@ problem_physics = dict(
 
 				  solve_FSI = True,				# enter "True" if you want to solve for fluid-structure interaction
 				  
-				  compressible_solid = True,	# enter "True" if compressible: Also remember to specify compressibility (Ld)
+				  compressible_solid = True,	# enter "True" if compressible: Also remember to specify compressibility (Ld) or possions ratio (nw)
 				  								# enter "False" if incompressible
 
 				  viscous_dissipation = False,	# Heat release due to viscous gradients 
@@ -57,7 +57,7 @@ physical_parameters = dict(
 	# Solid
 	rho_s = 10,									# Density (kg/m3)
 	Sm = 0,										# Shear modulus (N/m2)
-	Ld = 0,										# Compressibility (N/m2)
+	Ld = 0,										# Compressibility (N/m2) ... only for neoHookean
 	Spht_s = 0.11,								# Specific heat (J/kg.C)
 	K_s = 1.2 									# Thermal conductivity (W/m.C)
 )
@@ -119,11 +119,11 @@ post_process = True
 # File printing / solid-remeshing control
 # ---------------------------------------------------------------------
 print_control = dict(
-                  a = 40,   				# for printing variables and restart files
-                  b = 20,  					# for post processing data
-                  c = 20, 					# for simulation_wall_time text file
-                  d = 5,   					# for remeshing solid current-configuration mesh		
-                  e = 20    				# for runtime_tsp_courant_no_stats text file	
+                  a = 40,   					# for printing variables and restart files
+                  b = 20,  						# for post processing data
+                  c = 20, 						# for simulation_wall_time text file
+                  d = 5,   						# for remeshing solid current-configuration mesh		
+                  e = 20    					# for runtime_tsp_courant_no_stats text file	
                 )
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
