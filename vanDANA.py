@@ -20,7 +20,7 @@ def vanDANA_solver(args):
 	print_control.update({"a": args.a, "b": args.b})
 	fem_degree.update({"velocity_degree": args.velocity_degree, "displacement_degree": args.displacement_degree, "temperature_degree": args.temperature_degree})
 	time_control.update({"T": args.T, "adjustable_timestep": args.adjustable_timestep})
-	problem_physics.update({"solve_temperature": args.solve_temperature, "solve_FSI": args.solve_FSI, "viscous_dissipation": args.viscous_dissipation})
+	problem_physics.update({"solve_temperature": args.solve_temperature, "solve_FSI": args.solve_FSI, "solid_material": args.solid_material, "viscous_dissipation": args.viscous_dissipation})
 
 	timer_total.start()
 	memory = MemoryUsage('Start')
@@ -95,9 +95,9 @@ def vanDANA_solver(args):
 	    print(BLUE % "\nSolid behavior --- {} ; compressible = {}".format(problem_physics['solid_material'], problem_physics['compressible_solid']), flush = True)
 	    print(GREEN % "Shear modulus = {}".format(Sm), flush = True)
 	    if problem_physics['compressible_solid'] == True:
-		    if problem_physics['solid_material'] == 'linearelastic':	print(GREEN % "Poissons ratio = {}".format(Nw), "\n", flush = True)
-		    if problem_physics['solid_material'] == 'neoHookean':	print(GREEN % "Compressiblity = {}".format(Ld), "\n", flush = True)
-	    print(RED % "The following ratios are defined wrt fluid as the reference domain:", flush = True)
+		    if problem_physics['solid_material'] == 'linearelastic':	print(GREEN % "Poissons ratio = {}".format(Nw), flush = True)
+		    if problem_physics['solid_material'] == 'neoHookean':	print(GREEN % "Compressiblity = {}".format(Ld), flush = True)
+	    print(RED % "\nThe following ratios are defined wrt fluid as the reference domain:", flush = True)
 	    print(GREEN % "Density ratio = {}".format(rho), flush = True)
 	    if problem_physics['solve_temperature'] == True:
 		    print(GREEN % "Specific heat ratio = {}".format(Spht), flush = True)
