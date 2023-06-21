@@ -123,7 +123,7 @@ class Solid_problem:
 
 	def assemble_solid_problem(self, problem_physics, Dp_, mix, uf_, Lm_, dt):	
 
-		rho = self.rho; Ld = self.Ld; Nw, self.Nw; Sm = self.Sm; j = self.j
+		rho = self.rho; Ld = self.Ld; Nw = self.Nw; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
 
 		vector_assign_in_parallel(self.uf_, uf_)
@@ -146,7 +146,7 @@ class Solid_problem:
 		elif problem_physics['compressible_solid'] == True:
 
 			if problem_physics['solid_material'] == 'neoHookean' : stress = stress_c(Dp_[0] + Dp_[1], Ld, Sm)
-			elif problem_physics['solid_material'] == 'linearelastic' : stress = stress_lr_elastic_c(Dp_[0] + D_, Nw, Sm)
+			elif problem_physics['solid_material'] == 'linearelastic' : stress = stress_lr_elastic_c(Dp_[0] + Dp_[1], Nw, Sm)
 
 			a5 = rho*(1/(dt*dt))*dot(Dp_[1], hc)*dx + inner(nabla_grad(hc).T, stress)*dx 
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], hc)*dx + (rho-1)*dot(f, hc)*dx 
