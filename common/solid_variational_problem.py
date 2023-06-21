@@ -111,6 +111,7 @@ class Solid_problem:
 		self.dim = dim
 		self.Re = Constant(Re)
 		self.Ld = Constant(Ld)
+		self.Nw = Constant(Nw)
 		self.Sm = Constant(Sm)
 		self.rho = Constant(rho)
 		self.variables = variables
@@ -120,26 +121,34 @@ class Solid_problem:
 		# --------------------------------
 
 
-	def assemble_solid_problem(self, compressible_solid, Dp_, mix, uf_, Lm_, dt):	
+	def assemble_solid_problem(self, problem_physics, Dp_, mix, uf_, Lm_, dt):	
 
-		rho = self.rho; Ld = self.Ld; Sm = self.Sm; j = self.j
+		rho = self.rho; Ld = self.Ld; Nw, self.Nw; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
 
 		vector_assign_in_parallel(self.uf_, uf_)
 		vector_assign_in_parallel(self.Lm_, Lm_)
 
 		# Define incompressible solid problem
-		if compressible_solid == False:
+		if problem_physics['compressible_solid'] == False:
+
 			D_, ps_ = split(mix)
-			a5 = rho*(1/(dt*dt))*dot(D_, h)*dx + inner(nabla_grad(h).T, stress_inc(Dp_[0] + D_, ps_, Sm))*dx + dot(J(F(Dp_[0] + D_))-1, j)*dx
+			if problem_physics['solid_material'] == 'neoHookean' : stress = stress_inc(Dp_[0] + D_, ps_, Sm)
+			elif problem_physics['solid_material'] == 'linearelastic' : stress = stress_lr_elastic_inc(Dp_[0] + D_, ps_, Sm)
+
+			a5 = rho*(1/(dt*dt))*dot(D_, h)*dx + inner(nabla_grad(h).T, stress)*dx + dot(J(F(Dp_[0] + D_))-1, j)*dx
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], h)*dx + (rho-1)*dot(f, h)*dx      
 
 			if problem_physics['solve_FSI'] == True:
 				b5 += (1/dt)*dot(self.uf_, h)*dx - dot(self.Lm_, h)*dx	
 
 		# Define compressible solid problem	
-		elif compressible_solid == True:
-			a5 = rho*(1/(dt*dt))*dot(Dp_[1], hc)*dx + inner(nabla_grad(hc).T, stress_c(Dp_[0] + Dp_[1], Ld, Sm))*dx 
+		elif problem_physics['compressible_solid'] == True:
+
+			if problem_physics['solid_material'] == 'neoHookean' : stress = stress_c(Dp_[0] + Dp_[1], Ld, Sm)
+			elif problem_physics['solid_material'] == 'linearelastic' : stress = stress_lr_elastic_c(Dp_[0] + D_, Nw, Sm)
+
+			a5 = rho*(1/(dt*dt))*dot(Dp_[1], hc)*dx + inner(nabla_grad(hc).T, stress)*dx 
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], hc)*dx + (rho-1)*dot(f, hc)*dx 
 
 			if problem_physics['solve_FSI'] == True:

@@ -347,7 +347,7 @@ def vanDANA_solver(args):
 		    timer_s5.start()    
 		    # print(BLUE % "5: Solid momentum eq. step", flush = True)    
 		    if problem_physics['solve_FSI'] == True:    
-		        a5 = solid.assemble_solid_problem(problem_physics['compressible_solid'], Dp_, mix, uf_, Lm_[1], dt)
+		        a5 = solid.assemble_solid_problem(problem_physics, Dp_, mix, uf_, Lm_[1], dt)
 		        try:
 		        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 		        except:
