@@ -92,11 +92,10 @@ def vanDANA_solver(args):
 	if problem_physics['solve_FSI'] == True:
 
 	    print("\nSolid mesh specs | edge length: Max =",hmax_s, "; Min =",hmin_s, flush = True)
-	    print(BLUE % "\nSolid behavior --- {}".format(problem_physics['solid_material']), flush = True)
+	    print(BLUE % "\nSolid behavior --- {} ; compressible = {}".format(problem_physics['solid_material'], problem_physics['compressible_solid']), flush = True)
 	    print(GREEN % "Shear modulus = {}".format(Sm), flush = True)
 	    print(GREEN % "Poissons ratio = {}".format(Nw), flush = True)
-	    print(GREEN % "Compressiblity = {}".format(Ld), \
-	      BLUE % "; considering compressible solid = {}".format(problem_physics['compressible_solid']), "\n", flush = True)
+	    print(GREEN % "Compressiblity = {}".format(Ld), "\n", flush = True)
 	    print(RED % "The following ratios are defined wrt fluid as the reference domain:", flush = True)
 	    print(GREEN % "Density ratio = {}".format(rho), flush = True)
 	    if problem_physics['solve_temperature'] == True:
