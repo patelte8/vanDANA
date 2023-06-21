@@ -94,8 +94,9 @@ def vanDANA_solver(args):
 	    print("\nSolid mesh specs | edge length: Max =",hmax_s, "; Min =",hmin_s, flush = True)
 	    print(BLUE % "\nSolid behavior --- {} ; compressible = {}".format(problem_physics['solid_material'], problem_physics['compressible_solid']), flush = True)
 	    print(GREEN % "Shear modulus = {}".format(Sm), flush = True)
-	    print(GREEN % "Poissons ratio = {}".format(Nw), flush = True)
-	    print(GREEN % "Compressiblity = {}".format(Ld), "\n", flush = True)
+	    if problem_physics['compressible_solid'] == True:
+		    if problem_physics['solid_material'] == 'linearelastic':	print(GREEN % "Poissons ratio = {}".format(Nw), "\n", flush = True)
+		    if problem_physics['solid_material'] == 'neoHookean':	print(GREEN % "Compressiblity = {}".format(Ld), "\n", flush = True)
 	    print(RED % "The following ratios are defined wrt fluid as the reference domain:", flush = True)
 	    print(GREEN % "Density ratio = {}".format(rho), flush = True)
 	    if problem_physics['solve_temperature'] == True:
@@ -527,6 +528,7 @@ if __name__ == '__main__':
 	parser.add_argument('-restart', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=restart)
 	parser.add_argument('-solve_temperature', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=problem_physics["solve_temperature"])
 	parser.add_argument('-solve_FSI', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=problem_physics["solve_FSI"])
+	parser.add_argument('-solid_material', type=str, metavar='', required=False, default=problem_physics["solid_material"])
 	parser.add_argument('-viscous_dissipation', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=problem_physics["viscous_dissipation"])
 	parser.add_argument('-velocity_degree', type=int, metavar='', required=False, default=fem_degree["velocity_degree"])
 	parser.add_argument('-displacement_degree', type=int, metavar='', required=False, default=fem_degree["displacement_degree"])
