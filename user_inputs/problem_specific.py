@@ -1,4 +1,4 @@
-from dolfin import Expression
+from dolfin import Expression, UserExpression
 from .user_parameters import characteristic_scales, time_control
 from scipy.interpolate import splrep, splev
 
