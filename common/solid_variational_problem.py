@@ -9,6 +9,7 @@ import sys
 
 sys.path.insert(0,  '..')
 from user_inputs.user_parameters import *
+from user_inputs.problem_specific import Shear_modulus
 from user_inputs.boundary_initial_conditions import constrained_domain
 from utilities.read import *
 
@@ -112,7 +113,7 @@ class Solid_problem:
 		self.Re = Constant(Re)
 		self.Ld = Constant(Ld)
 		self.Nw = Constant(Nw)
-		self.Sm = Constant(Sm)
+		self.Sm = Constant(Sm) #Shear_modulus(subdomains=solid_mesh_R.get_mesh_subdomains(), Mat_0 = Sm, Mat_1 = 100*Sm, degree=1)
 		self.rho = Constant(rho)
 		self.variables = variables
 		self.dx = Measure("dx", domain=mesh)
