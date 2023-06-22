@@ -52,3 +52,21 @@ def evaluate_boundary_val(a):
 
     val = (splev((a['time'].t - a['nm'].cycle*a['period'])*a['Tsc'], a['func'])/a['Area'])/a['Vsc']
     return val
+
+class Shear_modulus(UserExpression):
+
+	def __init__(self, subdomains, Mat_0, Mat_1, **kwargs):
+		super().__init__(**kwargs)
+		self.subdomains = subdomains
+		self.Mat_0 = Mat_0
+		self.Mat_1 = Mat_1
+
+	def eval_cell(self, values, x, cell):
+		if self.subdomains[cell.index] == 2:
+			values[0] = self.Mat_0
+
+		else:
+			values[0] = self.Mat_1
+
+	def value_shape(self):
+		return ()
