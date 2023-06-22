@@ -13,11 +13,11 @@ def J(F):
     return det(F)   
 
 # Cauchy's strain tensor
-def E(B, dim):
+def E(B):
     
     E = B + B.T
     E *= 0.5
-    E -= Identity(dim)
+    E -= Identity(B.geometric_dimension())
     return E
 
 # Define fluid stress tensor
@@ -34,18 +34,15 @@ def sigma(Re, u, p):
 def stress_lr_elastic_inc(D_R, ps_R, Sm): 
     
     B = F(D_R)
-    E = E(B, D_R.geometric_dimension())
-
-    return (-1*ps_R + 2*Sm*E)*inv(B)  
+    return -1*ps_R*inv(B) + 2*Sm*inv(B)*E(B)  
 
 # Define solid stress : compressible
 def stress_lr_elastic_c(D_R, Nw, Sm): 
     
     B = F(D_R)
-    E = E(B, D_R.geometric_dimension())
     lame1 = (2*Sm*Nw)/(1-(2*Nw))
 
-    return (lame1*tr(E) + 2*Sm*E)*inv(B)
+    return lame1*tr(E(B))*inv(B) + 2*Sm*inv(B)*E(B)
 
 # Neohookean material
 # ----------------------------------------------------------
