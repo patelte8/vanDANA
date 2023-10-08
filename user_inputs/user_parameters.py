@@ -124,7 +124,7 @@ post_process = True
 # ---------------------------------------------------------------------
 print_control = dict(
                   a = 40,   					# for printing variables and restart files
-                  b = 20,  						# for post processing data
+                  b = 20,  						# for post processing quantities - text files
                   c = 20, 						# for simulation_wall_time text file
                   d = 5,   						# for remeshing solid current-configuration mesh		
                   e = 2    					# for timestep_courant_no_stats text file	
