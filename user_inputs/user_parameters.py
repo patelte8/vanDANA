@@ -127,7 +127,7 @@ print_control = dict(
                   b = 20,  						# for post processing data
                   c = 20, 						# for simulation_wall_time text file
                   d = 5,   						# for remeshing solid current-configuration mesh		
-                  e = 20    					# for runtime_tsp_courant_no_stats text file	
+                  e = 2    					# for timestep_courant_no_stats text file	
                 )
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
