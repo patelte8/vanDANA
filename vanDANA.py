@@ -311,7 +311,7 @@ def vanDANA_solver(args):
 
 		    timer_s2.start()
 		    # print(BLUE % "2: Pressure correction step", flush = True)
-		    b2 = flow.assemble_pressure_correction(u_, p_, Lm_f, dt)
+		    b2 = flow.assemble_pressure_correction(u_, p_, dt)
 		    flow.solve_pressure_correction(p_[0], b2, bcs['pressure'])
 		    s2 += timer_s2.stop()
 
