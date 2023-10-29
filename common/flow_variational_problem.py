@@ -230,7 +230,7 @@ class Fluid_problem:
 
 
 	# Pressure correction
-	def assemble_pressure_correction(self, u_, p_, Lm_f, dt):
+	def assemble_pressure_correction(self, u_, p_, dt):
 
 		p = self.p; q = self.q; dx = self.dx 
 		h_f = self.h_f; Re = self.Re; b2 = self.matrix['b2']
@@ -239,7 +239,7 @@ class Fluid_problem:
 		
 		if stabilization_parameters['PSPG_NS'] == True:
 			R = as_vector([self.residual[ui] for ui in range(self.u_components)])
-			L2 -= tau(alpha, u_[1], h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
+			L2 -= tau(alpha, u_[0], h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
 		
 		b2 = assemble(L2, tensor=b2)
 		return b2
