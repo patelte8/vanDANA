@@ -183,7 +183,7 @@ class Fluid_problem:
 				b1[ui].axpy(1.0, d['Yij'][ui]*Lm_f.sub(ui).vector())
 	
 		# Residual vector
-		Fluid_problem.residual_tentative_velocity(self, u_[1], u_[2], u_[2], p_[1], Lm_f, f, dt)
+		Fluid_problem.residual_tentative_velocity(self, u_[1], u_[2], u_ab, p_[1], Lm_f, f, dt)
 		
 		# Stabilization terms	
 		if stabilization_parameters['SUPG_NS'] == True:
