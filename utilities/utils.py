@@ -1,6 +1,6 @@
 from dolfin import MPI, Timer, Constant
 import sys, subprocess, os
-from os import getpid
+from os import getpid, path, remove
 
 
 # Printing helper functions 
@@ -17,6 +17,13 @@ def blockPrint():
 # Restore printing
 def enablePrint():
     sys.stdout = sys.__stdout__	
+
+# Remove killvanDANA file
+def remove_killvanDANA(directory):
+    try:
+        os.remove(path.join(directory, "results/killvanDANA"))
+    except:
+        pass
 
 
 

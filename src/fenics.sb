@@ -14,12 +14,5 @@
 
 srun -n 64 singularity exec ../fenics_2019_dev.img python3 vanDANA.py
 
-if [ ! -f ./results/text_files/complete.txt ]; then 
-	srun -n 64 singularity exec ../fenics_2019_dev.img python3 vanDANA.py -restart=True
-fi
-
 seff $SLURM_JOBID
 mv slurm-vanDANA-$SLURM_JOBID.out results/
-
-
-

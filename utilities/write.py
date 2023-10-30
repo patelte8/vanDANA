@@ -27,7 +27,7 @@ class write_mesh_H5:
 
 	def __init__(self, mpi_comm, directory, mesh, filename):
 
-		folder = path.join(directory, "mesh_files/")
+		folder = path.join(directory, "restart_variables/")
 		hdf = HDF5File(mpi_comm, folder + filename + ".h5", "w")
 		hdf.write(mesh, "/mesh"); hdf.flush()	
 		self.hdf = hdf
@@ -38,7 +38,8 @@ class write_mesh_H5:
 
 	def write_mesh_H5_subdomains(self, subdomains):
 
-		self.hdf.write(subdomains, "/subdomains"); self.hdf.flush()	
+		self.hdf.write(subdomains, "/subdomains"); self.hdf.flush()
+
 
 
  
@@ -108,7 +109,6 @@ class create_result_folder:
 		# Create XDMF files for visualization output
 		rewrite_mesh = False			
 		for i in files:
-			if i == 'Ts' or i == 'Lm': rewrite_mesh = True
 			handle = xdmf_file(folder_xdmf, i, rewrite_mesh)
 			xdmf_file_handles[i]=handle
 
@@ -136,9 +136,23 @@ class create_result_folder:
 
 		if self.restart == False and my_rank == 0:
 			for i in text_file_handles:
-				i.truncate(0); i.seek(0)
+				i.truncate(0); i.seek(0)			
 
 		return text_file_handles
+
+	def write_header_text_files(self, text_file_handles, my_rank):
+
+		if self.restart == False and my_rank == 0:
+			text_file_handles[0].write("#Time		#Drag			#Lift\n")
+			text_file_handles[1].write("#Time             #Timestep         #Max cell_Courant_no.  #Max cell_Re         #PISO velocity_error\n")
+			try:
+				text_file_handles[4].write("#Time		#Average_nusselt_no.\n")
+				text_file_handles[5].write("#Time		#Drag			#Lift			#Volume\n")
+				text_file_handles[6].write("#Time		#Drag			#Lift\n")
+				text_file_handles[7].write("#Time		#Radius_ratio min	#Radius_ratio max\n")
+				text_file_handles[8].write("#Time		#Average_nusselt_no.\n")
+			except:
+				pass	
 
 
 
@@ -176,7 +190,7 @@ def write_restart_files(directory, Mpi, file_handle, t, tsp, **restart_variables
 
 	if Mpi.my_rank == 0:
 	    file_handle.truncate(0); file_handle.seek(0)
-	    file_handle.write("{} {} {}".format(t, "\n", tsp))
+	    file_handle.write("{}{}{}".format(t, "\n", tsp))
 
 	for key, value in restart_variables.items():
 		y = 0

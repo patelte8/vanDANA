@@ -65,21 +65,20 @@ def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
 	return bcs
 
 
-def solid_create_boundary_conditions(solid_mesh_R, compressible_solid, dt, **V):
+def solid_create_boundary_conditions(solid_mesh, boundaries, compressible_solid, dt, **V):
 
-	# boundaries = solid_mesh_R.get_mesh_boundaries()
 	cylinder = 0; Complement_cylinder = 1         
-	mesh_part = MeshFunction("size_t", solid_mesh_R.mesh, 0, Complement_cylinder)     
+	mesh_part = MeshFunction("size_t", solid_mesh.mesh, 0, Complement_cylinder)     
 	RegionOfInterest().mark(mesh_part, cylinder)
-	subdomain_R = RegionOfInterest()
+	subdomainR = RegionOfInterest()
 
 	# Note to self: Boundary conditions are for incremental displacement (delta D)
 
 	# Solid
 	if compressible_solid == False:
-		bcx_cylinder = DirichletBC(V['solid'][1].sub(0), Constant((0, 0)), subdomain_R) #, method="pointwise")
+		bcx_cylinder = DirichletBC(V['solid'][1].sub(0), Constant((0, 0)), subdomainR) #, method="pointwise")
 	elif compressible_solid == True:
-	    bcx_cylinder = DirichletBC(V['solid'][0], Constant((0, 0)), subdomain_R) #, method="pointwise")
+	    bcx_cylinder = DirichletBC(V['solid'][0], Constant((0, 0)), subdomainR) #, method="pointwise")
 
 	bcx = [bcx_cylinder]  
 	return bcx    

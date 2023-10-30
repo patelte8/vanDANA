@@ -54,6 +54,10 @@ class Fluid_problem:
 			u_.insert(i, as_vector([Function(V) for ui in range(self.u_components)]))
 			p_.insert(i, Function(Q))
 
+		# PISO inner_loop variables
+		self.u_inner = as_vector([Function(V) for ui in range(self.u_components)])
+		self.p_inner = Function(Q)
+
 		uv   = Function(Vp)		
 		Lm_f = Function(Z1)
 		Lm_f.vector().zero()
@@ -235,11 +239,11 @@ class Fluid_problem:
 		p = self.p; q = self.q; dx = self.dx 
 		h_f = self.h_f; Re = self.Re; b2 = self.matrix['b2']
 	
-		L2 = dot(nabla_grad(p_[1]), nabla_grad(q))*dx - (1/dt)*divergence(u_[0], self.u_components)*q*dx
+		L2 = dot(nabla_grad(p_), nabla_grad(q))*dx - (1/dt)*divergence(u_, self.u_components)*q*dx
 		
 		if stabilization_parameters['PSPG_NS'] == True:
 			R = as_vector([self.residual[ui] for ui in range(self.u_components)])
-			L2 -= tau(alpha, u_[0], h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
+			L2 -= tau(alpha, u_, h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
 		
 		b2 = assemble(L2, tensor=b2)
 		return b2
@@ -257,13 +261,13 @@ class Fluid_problem:
 
 
 	# Velocity correction	
-	def assemble_velocity_correction(self, u_, p_, dt):
+	def assemble_velocity_correction(self, u_, p_0, p_1, dt):
   
 		b3 = [None]*self.u_components
 
 		for ui in range(self.u_components):
-			b3[ui] = self.matrix['Mij']*u_[0][ui].vector()
-			b3[ui].axpy(-float(dt), self.matrix['Pij'][ui]*(p_[0].vector() - p_[1].vector())) 
+			b3[ui] = self.matrix['Mij']*u_[ui].vector()
+			b3[ui].axpy(-float(dt), self.matrix['Pij'][ui]*(p_0.vector() - p_1.vector())) 
 
 		return b3
 
@@ -288,8 +292,7 @@ class Fluid_problem:
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[0].write("{} {} {} {} {} {}" \
-		        .format(t, "  ", drag, "  ", lift, "\n"))    
+		    text_file_handles[0].write(f"{t:0,.10G}		{drag:0,.10G}		{lift:0,.10G}\n")    
 
 	def calc_vorticity_streamfunction(self, u, bcs):
 		

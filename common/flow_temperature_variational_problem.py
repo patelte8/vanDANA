@@ -175,4 +175,4 @@ class Fluid_temperature_problem:
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[4].write("{} {} {} {}".format(t, "  ", average_nusselt, "\n"))    
+		    text_file_handles[4].write(f"{t:0,.10G}		{average_nusselt:0,.10G}\n")    

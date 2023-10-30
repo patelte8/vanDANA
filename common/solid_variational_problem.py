@@ -64,12 +64,12 @@ class CustomSolver(NewtonSolver):
 class Solid_problem:
 
 	# Note to self : This problem is solved on the solid reference configuration
-	def __init__(self, solid_mesh_R):
+	def __init__(self, solid_mesh):
 
 		rho, Spht, K, Ld, Nw, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
 		Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
 
-		mesh = solid_mesh_R.mesh
+		mesh = solid_mesh.mesh
 		dim = mesh.geometry().dim()
 
 		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree['displacement_degree'])        
@@ -91,8 +91,7 @@ class Solid_problem:
 
 		for i in range(3):
 			Dp_.insert(i, Function(R))
-		self.Lm_ = Function(Z)
-		self.uf_ = Function(R)
+
 		us_ = Function(R)
 		mix = Function(X)
 		ps_ = Function(FunctionSpace(mesh, T1))
@@ -113,11 +112,11 @@ class Solid_problem:
 		self.Re = Constant(Re)
 		self.Ld = Constant(Ld)
 		self.Nw = Constant(Nw)
-		self.Sm = Constant(Sm) #Shear_modulus(subdomains=solid_mesh_R.get_mesh_subdomains(), Mat_0 = Sm, Mat_1 = 100*Sm, degree=1)
+		self.Sm = Constant(Sm) #Shear_modulus(subdomains=solid_mesh.get_mesh_subdomains(), Mat_0 = Sm, Mat_1 = 100*Sm, degree=1)
 		self.rho = Constant(rho)
 		self.variables = variables
 		self.dx = Measure("dx", domain=mesh)
-		self.ds = Measure("ds", domain=mesh, subdomain_data=solid_mesh_R.get_mesh_boundaries())
+		self.ds = Measure("ds", domain=mesh, subdomain_data=solid_mesh.get_mesh_boundaries())
 		
 		# --------------------------------
 
@@ -126,9 +125,6 @@ class Solid_problem:
 
 		rho = self.rho; Ld = self.Ld; Nw = self.Nw; Sm = self.Sm; j = self.j
 		h = self.h; hc = self.hc; dx = self.dx; f = self.f
-
-		vector_assign_in_parallel(self.uf_, uf_)
-		vector_assign_in_parallel(self.Lm_, Lm_)
 
 		# Define incompressible solid problem
 		if problem_physics['compressible_solid'] == False:
@@ -141,7 +137,7 @@ class Solid_problem:
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], h)*dx + (rho-1)*dot(f, h)*dx      
 
 			if problem_physics['solve_FSI'] == True:
-				b5 += (1/dt)*dot(self.uf_, h)*dx - dot(self.Lm_, h)*dx	
+				b5 += (1/dt)*dot(uf_, h)*dx - dot(Lm_, h)*dx	
 
 		# Define compressible solid problem	
 		elif problem_physics['compressible_solid'] == True:
@@ -153,7 +149,7 @@ class Solid_problem:
 			b5 = (rho-1)*(1/(dt*dt))*dot(Dp_[2], hc)*dx + (rho-1)*dot(f, hc)*dx 
 
 			if problem_physics['solve_FSI'] == True:
-				b5 += (1/dt)*dot(self.uf_, hc)*dx - dot(self.Lm_, hc)*dx
+				b5 += (1/dt)*dot(uf_, hc)*dx - dot(Lm_, hc)*dx
 			
 		a5 -= b5
 		return a5	
@@ -201,7 +197,7 @@ class Solid_problem:
 	# Compute drag and lift	(Note to self: written as per 2D cylinder)
 	def	post_process_data(self, Mpi, u, p, Dp, t, text_file_handles):
 
-		ds = self.ds; n = self.n
+		dx = self.dx; ds = self.ds; n = self.n
 
 		traction = -1*dot(sigma(self.Re, u, p), n)
 		drag = 2*assemble(dot(traction, self.nx)*ds)
@@ -210,4 +206,4 @@ class Solid_problem:
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[5].write("{} {} {} {} {} {} {} {}".format(t, "  ", drag, "  ", lift, "  ", jacb, "\n"))  
+		    text_file_handles[5].write(f"{t:0,.10G}		{drag:0,.10G}		{lift:0,.10G}		{jacb:0,.10G}\n")  

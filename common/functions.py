@@ -2,7 +2,8 @@ from dolfin import *
 from scipy.interpolate import splev
 import numpy as np
 import sys, math, os, cppimport
-from ufl import Jacobian  
+from ufl import Jacobian
+from utilities.utils import BLUE  
 
 # Functions for boundary conditions
 class Inflow(UserExpression):
@@ -293,6 +294,13 @@ def vector_assign_in_parallel(v, w):
     v.vector().apply("insert")
 
 
+# Function to map solid_mesh between reference and current configurations
+def mapping(mesh, Mv):
+
+    ALE.move(mesh, Mv)
+    mesh.bounding_box_tree().build(mesh)
+
+
 # Degrees of freedom
 def Calc_total_DOF(Mpi, **kwargs):
 
@@ -350,23 +358,31 @@ def round_decimals_down(number:float, decimals:int=8):
     return math.floor(number * factor) / factor
 
 # Calculate and print runtime statistics and update timestep
-def calc_runtime_stats_timestep(Mpi, u, u_components, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, time_control): 
+def calc_runtime_stats_timestep(Mpi, u, u_components, u_diff, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, time_control): 
 
     DN, NM = DENO(u, u_components, Mpi, mesh, h_f_X)
     C_no_real = DN*tsp
     local_Re = NM*float(Re) 
-    tsp_min = 0.125*hmin_f
+    tsp_min = 0.02*hmin_f
 
     Mpi.set_barrier()
     if Mpi.get_rank() == 0:
-        text_file_handles[1].write(f"{t}    {tsp}     {C_no_real}     {local_Re}\n")
+        text_file_handles[1].write(f"{t:0,.8f}        {tsp:0,.8f}        {C_no_real:0,.8f}             {local_Re:0,.8f}           {u_diff:0,.6e}\n")
 
     if time_control['adjustable_timestep'] == True:
 
         if C_no_real > time_control['C_no']:
-            tsp = round_decimals_down((0.25*time_control['C_no'] + 0.75*C_no_real)/DN, 5)
-        if tsp <= tsp_min:
-            tsp = round_decimals_down(tsp_min, 5)     
+            if C_no_real > 0.8:
+                tsp = round_decimals_down((time_control['C_no'])/DN, 5)
+            else:
+                tsp = round_decimals_down((0.4*time_control['C_no'] + 0.6*C_no_real)/DN, 5)
+
+        elif C_no_real < time_control['C_no']:
+            tsp = round_decimals_down((0.6*time_control['C_no'] + 0.4*C_no_real)/DN, 5)        
+                
+        if tsp < tsp_min:
+            tsp = round_decimals_down(tsp_min, 5)
+            print(BLUE % "timestep at dt_min : {}".format(tsp), flush = True)     
 
     return tsp 
 
@@ -402,7 +418,3 @@ def update_variables(update, u_components, problem_physics):
              
             Ts_[1].assign(Ts_[0])
             LmTs_[1].assign(LmTs_[0])
-            
-
-
-

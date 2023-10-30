@@ -15,6 +15,8 @@ from matplotlib import rc, pylab as plt
 
 def vanDANA_solver(args):
 	
+	timer_total.start()
+
 	restart = args.restart
 	post_process = args.post_process
 	print_control.update({"a": args.a, "b": args.b})
@@ -22,9 +24,9 @@ def vanDANA_solver(args):
 	time_control.update({"T": args.T, "adjustable_timestep": args.adjustable_timestep})
 	problem_physics.update({"solve_temperature": args.solve_temperature, "solve_FSI": args.solve_FSI, "solid_material": args.solid_material, "viscous_dissipation": args.viscous_dissipation})
 
-	timer_total.start()
 	memory = MemoryUsage('Start')
 	curr_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
+	remove_killvanDANA(curr_dir)	
 
 	# MPI-initialize / terminal printing controls
 	Mpi = MPI_Manage()
@@ -61,10 +63,13 @@ def vanDANA_solver(args):
 
 	if problem_physics['solve_FSI'] == True:
 	    mesh_path = path.join(curr_dir, "user_inputs/"); mesh_file = "file_s.h5"
+	    if restart == True:
+	    	mesh_path = path.join(curr_dir, "results/restart_variables/"); mesh_file = "solid_current_mesh.h5"
 
 	    solid_mesh = get_mesh(Mpi.mpi_comm, mesh_path, mesh_file)
-	    solid_mesh_R = get_mesh(Mpi.mpi_comm, mesh_path, mesh_file)
-	    hmax_s = Mpi.Max(solid_mesh_R.mesh.hmax()); hmin_s = Mpi.Min(solid_mesh_R.mesh.hmin()) 
+	    boundaries = solid_mesh.get_mesh_boundaries(); subdomains = solid_mesh.get_mesh_subdomains()
+		
+	    hmax_s = Mpi.Max(solid_mesh.mesh.hmax()); hmin_s = Mpi.Min(solid_mesh.mesh.hmin()) 
 
 	# Problem dimension
 	dim = fluid_mesh.mesh.geometry().dim()
@@ -72,6 +77,7 @@ def vanDANA_solver(args):
 	# ---------------------------------------------------------------------------------
 
 	# Predict initial time-step
+	if time_control['C_no'] > 0.8:	time_control.update(C_no = 0.8)
 	if time_control['adjustable_timestep'] == True:
 	    initial_time_step = round_decimals_down(0.2*hmin_f, 5)
 	    time_control.update(dt = initial_time_step)     
@@ -115,6 +121,7 @@ def vanDANA_solver(args):
 	flow = Fluid_problem(fluid_mesh, result_folder.bool_stream); FS = dict(fluid = flow.F) 
 	u_components = flow.u_components; u_ = flow.variables['u_'];  uv = flow.variables['uv']; assigner_uv = flow.assigner_uv 
 	p_ = flow.variables['p_']; Lm_f = flow.variables['Lm_f']; vort = flow.variables['vort']; psi = flow.variables['psi']
+	u_inner = flow.u_inner; p_inner = flow.p_inner
 
 	# Initialize temperature problem
 	flow_temp = Fluid_temperature_problem(fluid_mesh); FS.update(fluid_temp=flow_temp.F)
@@ -122,7 +129,7 @@ def vanDANA_solver(args):
 
 	# Initialize solid problem
 	if problem_physics['solve_FSI'] == True:
-	    solid = Solid_problem(solid_mesh_R); FS.update(solid = solid.F)
+	    solid = Solid_problem(solid_mesh); FS.update(solid = solid.F)
 	    Dp_ = solid.variables['Dp_']; mix = solid.variables['mix']; us_ = solid.variables['us_']; ps_ = solid.variables['ps_']; J_ = solid.variables['J_']
 	    Mv = Function(VectorFunctionSpace(solid_mesh.mesh, 'P', fem_degree['displacement_degree']))
 
@@ -159,7 +166,7 @@ def vanDANA_solver(args):
 	bcs = fluid_create_boundary_conditions(fluid_mesh, inflow, **FS)
 
 	if problem_physics['solve_FSI'] == True:
-	    bcs.update(solid = solid_create_boundary_conditions(solid_mesh_R, problem_physics['compressible_solid'], dt, **FS))
+	    bcs.update(solid = solid_create_boundary_conditions(solid_mesh, boundaries, problem_physics['compressible_solid'], dt, **FS))
 
 	# ---------------------------------------------------------------------------------    
 
@@ -181,7 +188,10 @@ def vanDANA_solver(args):
 	# Time
 	t = 0
 
-	counters = create_counters(5)   # enter number of counters required
+	piso_tol = 1e-3											# tolerance for PISO loop
+	piso_iter = 2 											# no. of PISO interations
+	recovering = False; no_consecutive_recovers = 0 		# recovery variables
+	counters = create_counters(5)   						# enter number of counters required
 
 	# Timer variables
 	s1, s2, s3, s4, s5, s6, s7, si, sm, sr, s_dt = [0.0 for _ in range(11)]
@@ -193,11 +203,14 @@ def vanDANA_solver(args):
 	pv1.write_mesh_boundaries(fluid_mesh.get_mesh_boundaries())
 
 	if problem_physics['solve_FSI'] == True:
-	    pvR = write_mesh(result_folder.folder, solid_mesh_R.mesh, "solid_reference_mesh")
-	    pvR.write_mesh_boundaries(solid_mesh_R.get_mesh_boundaries())
-	    pvR.write_mesh_subdomains(solid_mesh_R.get_mesh_subdomains())
+		timeseries = write_time_series(curr_dir, restart)
 
-	    timeseries = write_time_series(curr_dir, restart)
+		filename = "solid_reference_mesh"
+		if restart == True:	filename = "solid_restart_mesh"
+
+		pv = write_mesh(result_folder.folder, solid_mesh.mesh, filename)
+		pv.write_mesh_boundaries(boundaries)
+		pv.write_mesh_subdomains(subdomains)
 
 	# Output/write files
 	files = ['u', 'p', 'T']
@@ -213,6 +226,7 @@ def vanDANA_solver(args):
 
 	xdmf_file_handles, hdf5_file_handles = result_folder.create_files(files, Mpi.mpi_comm)
 	text_file_handles = result_folder.create_text_files(text_files, Mpi.my_rank)
+	result_folder.write_header_text_files(text_file_handles, Mpi.my_rank) 	
 
 	# --------------------------------------------------------------------------------- 
 
@@ -238,16 +252,6 @@ def vanDANA_solver(args):
 	    dt = Constant(tsp)
 	    print(RED % "Restart time_step = {}".format(tsp), flush = True)
 
-	# Move solid_mesh to restart position before starting simulation
-	if restart and problem_physics['solve_FSI'] == True:
-	    print(RED % "Translate initial mesh to restart position\n", flush = True)
-	    Mv.vector().zero(); vector_assign_in_parallel(Mv, Dp_[0])
-	    ALE.move(solid_mesh.mesh, project(Mv, VectorFunctionSpace(solid_mesh.mesh, 'P', 1)))
-	    solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
-	    lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
-	    if problem_physics['solve_temperature'] == True:
-	        solid_temp.dx = dolfin.dx(solid_mesh.mesh); solid_temp.ds = dolfin.ds(solid_mesh.mesh)
-
 	# ---------------------------------------------------------------------------------         
 
 	# Calculate Total DOF's solved
@@ -256,7 +260,7 @@ def vanDANA_solver(args):
 	if problem_physics['solve_FSI'] == True:
 	    DOFS_variables.update(displacement = [Dp_[1]], lagrange_multiplier = [Lm_[0]])
 	if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
-	        DOFS_variables['lagrange_multiplier'].extend([LmTs_[0]])
+	    DOFS_variables['lagrange_multiplier'].extend([LmTs_[0]])
 
 	DOFS = Calc_total_DOF(Mpi, **DOFS_variables)
 	print(GREEN % 'DOFs = {}'.format(DOFS), "\n", flush = True)
@@ -277,219 +281,273 @@ def vanDANA_solver(args):
 	print(RED % 'Total intitial memory usage for setting up & assembly of the problem = {} MB (RSS)'.format(initial_memory_use), "\n", flush = True)
 	print(RED % 'Start Simulatons : t = {}'.format(t), "\n", flush = True)
 
+	# ---------------------------------------------------------------------------------
+
 	# Time loop
 	try:
 
 		while T > tsp and t < T:
-		    
-		    timer_dt.start()
-		    update_counter(counters)
 
-		    # Update current time
-		    t += tsp   
+			try: 	# loop for recoveries 
 
-		    # Update boundary conditions : only if time-dependent
-		    # parabolic_profile.t = t; tim.t = t; num_cycle.cycle = int(t / t_period)     
-		    # for ui, value in inflow.items():     
-			   #  inflow[ui][0].v = evaluate_boundary_val(param_LSPV); inflow[ui][1].v = evaluate_boundary_val(param_LIPV)
-			   #  inflow[ui][2].v = evaluate_boundary_val(param_RSPV); inflow[ui][3].v = evaluate_boundary_val(param_RIPV)
+				timer_dt.start()
+				inner_iter = 0
+				
+				if recovering == False:
+				    update_counter(counters)
 
-		    if problem_physics['solve_FSI'] == True:
-		        timer_si.start()
-		        Lm_f.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, Lm_[1], FS['fluid'][2], interpolation_fx, "F"))
-		        si += timer_si.stop()
-		        
-		    timer_s1.start()
-		    # print(BLUE % "1: Predict tentative velocity step", flush = True)
-		    A1, b1 = flow.assemble_tentative_velocity(u_, p_, Lm_f, dt)
-		    try:
-		    	flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
-		    except:
-		    	flow.change_initial_guess(u_[0])
-		    	flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
-		    s1 += timer_s1.stop()
+				    # Update current time
+				    t += tsp					
+				
+				# ---------------------------------------------------------------------------------
 
-		    timer_s2.start()
-		    # print(BLUE % "2: Pressure correction step", flush = True)
-		    b2 = flow.assemble_pressure_correction(u_, p_, dt)
-		    flow.solve_pressure_correction(p_[0], b2, bcs['pressure'])
-		    s2 += timer_s2.stop()
+				# Update boundary conditions : only if time-dependent
+				# parabolic_profile.t = t; tim.t = t; num_cycle.cycle = int(t / t_period)     
+				# for ui, value in inflow.items():     
+				   #  inflow[ui][0].v = evaluate_boundary_val(param_LSPV); inflow[ui][1].v = evaluate_boundary_val(param_LIPV)
+				   #  inflow[ui][2].v = evaluate_boundary_val(param_RSPV); inflow[ui][3].v = evaluate_boundary_val(param_RIPV)
 
-		    timer_s3.start()
-		    # print(BLUE % "3: Velocity correction step", flush = True)
-		    b3 = flow.assemble_velocity_correction(u_, p_, dt)
-		    flow.solve_velocity_correction(u_[0], b3, bcs['velocity'])
-		    s3 += timer_s3.stop()
+				# ---------------------------------------------------------------------------------   
 
-		    assigner_uv.assign(uv, [u_[0][ui] for ui in range(u_components)])
+				if problem_physics['solve_FSI'] == True:
+				    timer_si.start()
+				    Lm_f.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, Lm_[1], FS['fluid'][2], interpolation_fx, "F"))
+				    si += timer_si.stop()
+				    
+				timer_s1.start()
+				# print(BLUE % "1: Predict tentative velocity step", flush = True)
+				A1, b1 = flow.assemble_tentative_velocity(u_, p_, Lm_f, dt)
+				try:
+					flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
+				except:
+					print(BLUE % "changing initial guess for predicting tentative velocity", flush = True)
+					flow.change_initial_guess(u_[0])
+					flow.solve_tentative_velocity(A1, u_[0], b1, bcs['velocity'])
+				s1 += timer_s1.stop()
 
-		    # --------------------------------------------------------------------------------- 
+				# PISO inner loop
+				p_inner.assign(p_[1]); u_diff = 1e8
+				while inner_iter < piso_iter:
+					if u_diff > piso_tol:
 
-		    if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
-		        timer_si.start()
-		        LmTf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, LmTs_[1], FS['fluid_temp'][0], interpolation_fx, "F"))
-		        si += timer_si.stop()
+						inner_iter += 1; u_diff = 0.0
+						for ui in range(u_components):
+							u_inner[ui].assign(u_[0][ui]) 
+								
+						timer_s2.start()
+						# print(BLUE % "2: Pressure correction step", flush = True)
+						b2 = flow.assemble_pressure_correction(u_[0], p_inner, dt)
+						flow.solve_pressure_correction(p_[0], b2, bcs['pressure'])
+						s2 += timer_s2.stop()
 
-		    timer_s4.start()
-		    # print(BLUE % "4: Energy conservation step", flush = True)
-		    if problem_physics['solve_temperature'] == True:
-		        A4, b4 = flow_temp.assemble_temperature(T_, uv, LmTf_, dt)
-		        flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
-		    s4 += timer_s4.stop()	    
+						timer_s3.start()
+						# print(BLUE % "3: Velocity correction step", flush = True)
+						b3 = flow.assemble_velocity_correction(u_[0], p_[0], p_inner, dt)
+						flow.solve_velocity_correction(u_[0], b3, bcs['velocity'])
+						s3 += timer_s3.stop()
 
-		    # --------------------------------------------------------------------------------- 
+						p_inner.assign(p_[0])
+						for ui in range(u_components):
+							u_inner[ui].vector().axpy(-1.0, u_[0][ui].vector())
+							u_diff += u_inner[ui].vector().norm('l2')
+						print("PISO loop {} : velocity error = {:.3e}".format(inner_iter, u_diff), flush = True)
 
-		    if problem_physics['solve_FSI'] == True:
-		        timer_si.start()
-		        uf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, uv, FS['lagrange'][0], interpolation_fx, "S"))
-		        si += timer_si.stop()
+				assigner_uv.assign(uv, [u_[0][ui] for ui in range(u_components)])
 
-		    timer_s5.start()    
-		    # print(BLUE % "5: Solid momentum eq. step", flush = True)    
-		    if problem_physics['solve_FSI'] == True:    
-		        a5 = solid.assemble_solid_problem(problem_physics, Dp_, mix, uf_, Lm_[1], dt)
-		        try:
-		        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
-		        except:
-		        	solid.change_initial_guess(Dp_[1], mix)	        		        	
-		        	solid.solve_solid_displacement(solid_mesh_R.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+				# --------------------------------------------------------------------------------- 
 
-		        Dp_[0].vector().axpy(1.0, Dp_[1].vector())
-		        # solid.compute_jacobian(J_, Dp_[0])
+				if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
+				    timer_si.start()
+				    LmTf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, LmTs_[1], FS['fluid_temp'][0], interpolation_fx, "F"))
+				    si += timer_si.stop()
 
-		        us_.vector().zero()
-		        us_.vector().axpy(1/float(dt), Dp_[1].vector())
-		    s5 += timer_s5.stop()
-		    
-		    # --------------------------------------------------------------------------------- 
+				timer_s4.start()
+				# print(BLUE % "4: Energy conservation step", flush = True)
+				if problem_physics['solve_temperature'] == True:
+				    A4, b4 = flow_temp.assemble_temperature(T_, uv, LmTf_, dt)
+				    flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
+				s4 += timer_s4.stop()	    
 
-		    timer_s6.start()
-		    # print(BLUE % "6: Lagrange multiplier (fictitious force) step", flush = True)
-		    if problem_physics['solve_FSI'] == True:
-		        a6, b6 = lagrange.assemble_lagrange_multiplier(Lm_, us_, uf_, dt)
-		        lagrange.solve_lagrange_multiplier(a6, Lm_[0], b6)
-		    s6 += timer_s6.stop()    
+				# --------------------------------------------------------------------------------- 
 
-		    # --------------------------------------------------------------------------------- 
+				if problem_physics['solve_FSI'] == True:
+				    timer_si.start()
+				    uf_.assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, uv, FS['lagrange'][0], interpolation_fx, "S"))
+				    si += timer_si.stop()
 
-		    if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
-		        timer_si.start()
-		        Ts_[0].assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, T_[0], FS['solid_temp'][1], interpolation_fx, "S"))
-		        si += timer_si.stop()
+				if problem_physics['solve_FSI'] == True:
+					# Mapping to reference configuration
+					timer_sm.start()
+					Mv.assign(Dp_[0]); Mv.vector()[:]*=-1
+					mapping(solid_mesh.mesh, Mv)
+					sm += timer_sm.stop()
 
-		    timer_s7.start()
-		    # print(BLUE % "7: Solid temperature based lagrange multiplier step", flush = True)
-		    if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
-		        a7, b7 = solid_temp.assemble_solid_temperature_lagrange_multiplier(Ts_, uf_, dt)
-		        solid_temp.solve_solid_temperature_lagrange_multiplier(a7, LmTs_[0], b7)
-		    s7 += timer_s7.stop()
+					timer_s5.start()
+					# print(BLUE % "5: Solid momentum eq. step", flush = True)
+					a5 = solid.assemble_solid_problem(problem_physics, Dp_, mix, uf_, Lm_[1], dt)
+					try:
+						solid.solve_solid_displacement(solid_mesh.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
+					except:
+						print(BLUE % "changing initial guess for solid momentum eq.", flush = True)
+						solid.change_initial_guess(Dp_[1], mix)	        		        	
+						solid.solve_solid_displacement(solid_mesh.mesh, problem_physics['compressible_solid'], a5, Dp_[1], mix, ps_, p_[0], bcs['solid'])
 
-		    # --------------------------------------------------------------------------------- 
+					Dp_[0].vector().axpy(1.0, Dp_[1].vector())
+					# solid.compute_jacobian(J_, Dp_[0])
 
-		    # Print output files
-		    if counters[0] >= print_control['a']:
+					us_.vector().zero()
+					us_.vector().axpy(1/float(dt), Dp_[1].vector())
+					s5 += timer_s5.stop()
 
-		        reset_counter(counters, 0); Mpi.set_barrier()
-		        print(BLUE % "File printing in progress --- Simulation run time : {} , Wall time elapsed : {} sec".format(t, timer_total.elapsed()[0]), flush = True) 
+					# Mapping to current configuration
+					timer_sm.start()
+					Mv.vector()[:]*=-1
+					mapping(solid_mesh.mesh, Mv)
+					sm += timer_sm.stop()
+				
+				# --------------------------------------------------------------------------------- 
 
-		        vort, psi = flow.calc_vorticity_streamfunction(uv, bcs['streamfunction'])
+				timer_s6.start()
+				# print(BLUE % "6: Lagrange multiplier (fictitious force) step", flush = True)
+				if problem_physics['solve_FSI'] == True:
+				    a6, b6 = lagrange.assemble_lagrange_multiplier(Lm_, us_, uf_, dt)
+				    lagrange.solve_lagrange_multiplier(a6, Lm_[0], b6)
+				s6 += timer_s6.stop()    
 
-		        write_solution_files(restart, problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)
+				# --------------------------------------------------------------------------------- 
 
-		        if problem_physics['solve_FSI'] == True:
-		            # pv2 = write_mesh(result_folder.folder, solid_mesh.mesh, "solid_current_mesh")
-		            # pv2.write_mesh_boundaries(solid_mesh.get_mesh_boundaries())
-		            # pv2.write_mesh_subdomains(solid_mesh.get_mesh_subdomains())
+				if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
+				    timer_si.start()
+				    Ts_[0].assign(interpolate_nonmatching_mesh_delta(fsi_interpolation, T_[0], FS['solid_temp'][1], interpolation_fx, "S"))
+				    si += timer_si.stop()
 
-		            timeseries.store(solid_mesh.mesh, t)
+				timer_s7.start()
+				# print(BLUE % "7: Solid temperature based lagrange multiplier step", flush = True)
+				if problem_physics['solve_FSI'] and problem_physics['solve_temperature'] == True:
+				    a7, b7 = solid_temp.assemble_solid_temperature_lagrange_multiplier(Ts_, uf_, dt)
+				    solid_temp.solve_solid_temperature_lagrange_multiplier(a7, LmTs_[0], b7)
+				s7 += timer_s7.stop()
 
-		        # Write restart files    
-		        write_restart_files(result_folder.folder, Mpi, text_file_handles[2], t, tsp, **restart_write_variables)
+				recovering = False; no_consecutive_recovers = 0
 
-		    # Update progress on terminal
-		    print(' '*100 + "Progress : " + str((t/T)*100) + " %", flush = True)
+			except Exception as e:
+				
+				recovering = True; no_consecutive_recovers += 1
+				print(BLUE % 'error message : ', flush = True); traceback.print_exc(file=sys.stdout) #; print(e, flush = True)
+				print(BLUE % "Recovering ... because vanDANA solver diverged --- at time : {} sec , corresponding timestep : {}".format(t, tsp), flush = True)
 
-		    # --------------------------------------------------------------------------------- 
+				tsp /= 2; t -= tsp
+				dt = Constant(tsp)
 
-		    # Output post-processing data
-		    if post_process == True:
-			    if counters[1] >= print_control['b']:
+				if no_consecutive_recovers > 5:
+					print(BLUE % 'vanDANA solver - TERMINATED : t = {}, due to five consecutive recovers'.format(t), "\n", flush = True)
+					break
+				else:
+					continue		
 
-			        reset_counter(counters, 1)
-			        flow.post_process_data(Mpi, uv, p_[0], t, tsp, text_file_handles)
-			        if problem_physics['solve_temperature'] == True: 
-			        	flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
-			        if problem_physics['solve_FSI'] == True:
-			        	solid.post_process_data(Mpi, us_, ps_, Dp_[0], t, text_file_handles)
-			        	lagrange.post_process_data(Mpi, Lm_[0], uf_, t, dt, text_file_handles)
-				        if problem_physics['solve_temperature'] == True:	
-				        	solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
+			else: 
+		
+				# Update progress on terminal
+				print(' '*100 + "Progress : " + str((t/T)*100) + " %", flush = True)
+				
+				# Print output files
+				if counters[0] >= print_control['a']:
 
-		    # If required: calculate new time-step      
-		    if counters[4] >= print_control['e']:    
+					reset_counter(counters, 0); Mpi.set_barrier()
+					print(BLUE % "File printing in progress --- Simulation run time : {} , Wall time elapsed : {} sec".format(t, timer_total.elapsed()[0]), flush = True) 
 
-		        reset_counter(counters, 4)
-		        tsp = calc_runtime_stats_timestep(Mpi, u_[0], u_components, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, flow.Re, time_control)
-		        dt  = Constant(tsp)         
+					vort, psi = flow.calc_vorticity_streamfunction(uv, bcs['streamfunction'])
 
-		    # ---------------------------------------------------------------------------------     
+					write_solution_files(restart, problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)
 
-		    # Update previous solution
-		    update_variables(update, u_components, problem_physics)
+					# Write restart files    
+					write_restart_files(result_folder.folder, Mpi, text_file_handles[2], t, tsp, **restart_write_variables)
 
-		    # Move mesh
-		    timer_sm.start()
-		    if problem_physics['solve_FSI'] == True:
-		        
-		        Mv.vector().zero(); vector_assign_in_parallel(Mv, Dp_[1])
-		        ALE.move(solid_mesh.mesh, Mv)
-		        solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
-		        lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
-		        if problem_physics['solve_temperature'] == True:
-		            solid_temp.dx = dolfin.dx(solid_mesh.mesh); solid_temp.ds = dolfin.ds(solid_mesh.mesh)
-		    sm += timer_sm.stop()
+					if problem_physics['solve_FSI'] == True:
+						pv2 = write_mesh_H5(Mpi.mpi_comm, result_folder.folder, solid_mesh.mesh, "solid_current_mesh")
+						pv2.write_mesh_H5_boundaries(boundaries)
+						pv2.write_mesh_H5_subdomains(subdomains)
+						
+						timeseries.store(solid_mesh.mesh, t)
 
-		    # Remeshing solid current-congifuration mesh
-		    timer_sr.start()
-		    if problem_physics['solve_FSI'] == True:
-		        if counters[3] >= print_control['d']:
+				# --------------------------------------------------------------------------------- 
 
-		            reset_counter(counters, 3)
-		            print(GREEN % "Remeshing solid current-congifuration mesh", flush = True)
-		            solid_mesh.mesh, ratio_min, ratio_max = mesh_smoothening(solid_mesh.mesh)   
-		            solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
-		            lagrange.dx = dolfin.dx(solid_mesh.mesh); lagrange.ds = dolfin.ds(solid_mesh.mesh)
-		            if problem_physics['solve_temperature'] == True:
-		                solid_temp.dx = dolfin.dx(solid_mesh.mesh); solid_temp.ds = dolfin.ds(solid_mesh.mesh)
-		            if Mpi.get_rank() == 0:
-		                text_file_handles[7].write("{} {} {} {} {} {}".format(t, "  ", ratio_min, "  ", ratio_max, "\n"))
-		    sr += timer_sr.stop()
+				# Output post-processing data
+				if post_process == True:
+					if counters[1] >= print_control['b']:
 
-		    # --------------------------------------------------------------------------------- 
+						reset_counter(counters, 1)
+						flow.post_process_data(Mpi, uv, p_[0], t, tsp, text_file_handles)
+						if problem_physics['solve_temperature'] == True: 
+							flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
+						if problem_physics['solve_FSI'] == True:
+							solid.post_process_data(Mpi, us_, ps_, Dp_[0], t, text_file_handles)
+							lagrange.post_process_data(Mpi, Lm_[0], uf_, t, dt, text_file_handles)
+							if problem_physics['solve_temperature'] == True:	
+								solid_temp.post_process_data(Mpi, Ts_[0], t, text_file_handles)
 
-		    # Timing tasks
-		    if counters[2] >= print_control['c']:
-		    	
-		        reset_counter(counters, 2); Mpi.set_barrier() 
-		        if Mpi.get_rank() == 0:
-		            text_file_handles[3].truncate(0); text_file_handles[3].seek(0)
-		            text_file_handles[3].write(f"{t}    {s1}    {s2}    {s3}    {s4}    {s5}    {s6}    {s7}    {si}    {sm}    {sr}\n\n")
-		    s_dt += timer_dt.stop()
+				# If required: calculate new time-step      
+				if counters[4] >= print_control['e']:    
+
+					reset_counter(counters, 4)
+					tsp = calc_runtime_stats_timestep(Mpi, u_[0], u_components, u_diff, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, flow.Re, time_control)
+					dt  = Constant(tsp)         
+
+				# ---------------------------------------------------------------------------------     
+
+				# Update previous solution
+				update_variables(update, u_components, problem_physics)
+
+				# Move mesh by delta D
+				timer_sm.start()
+				if problem_physics['solve_FSI'] == True:		
+					ALE.move(solid_mesh.mesh, Dp_[1])
+					solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
+				sm += timer_sm.stop()
+
+				# Remeshing solid current-congifuration mesh
+				timer_sr.start()
+				if problem_physics['solve_FSI'] == True:
+					if counters[3] >= print_control['d']:
+
+						reset_counter(counters, 3)
+						print(GREEN % "Remeshing solid current-congifuration mesh", flush = True)
+						solid_mesh.mesh, ratio_min, ratio_max = mesh_smoothening(solid_mesh.mesh)   
+						solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
+						if Mpi.get_rank() == 0:
+							text_file_handles[7].write(f"{t:0,.10G}		{ratio_min:0,.10G}		{ratio_max:0,.10G}\n")
+				sr += timer_sr.stop()
+
+			finally: 
+
+				# Timing tasks
+				if counters[2] >= print_control['c']:
+					
+					reset_counter(counters, 2); Mpi.set_barrier() 
+					if Mpi.get_rank() == 0:
+						text_file_handles[3].truncate(0); text_file_handles[3].seek(0)
+						text_file_handles[3].write("#Time		#Step_1			#Step_2			#Step_3			#Step_4			#Step_5			#Step_6			#Step_7			#Step_interpolation	#Step_move_mesh		#Step_remeshing\n")
+						text_file_handles[3].write(f"{t:0,.10G}		{s1:0,.10G}		{s2:0,.10G}		{s3:0,.10G}		{s4:0,.10G}		{s5:0,.10G}		{s6:0,.10G}		{s7:0,.10G}		{si:0,.10G}		{sm:0,.10G}		{sr:0,.10G}\n\n")
+
+				s_dt += timer_dt.stop()
+
+				# Check for killvanDANA file
+				if os.path.isfile(path.join(curr_dir, "results/killvanDANA")) == True:	
+					print(RED % "--- killing vanDANA solver --- t = {}".format(t), "\n", flush = True)
+					break
 
 	# ---------------------------------------------------------------------------------     
 
 	except Exception as e: print(BLUE % 'error message : ', flush = True); traceback.print_exc(file=sys.stdout) #; print(e, flush = True)		
 
-	else:
-
-		print(BLUE % 'vanDANA solver - COMPLETED : t = {}'.format(t), "\n", flush = True)
-		if t >= T and Mpi.get_rank() == 0:
-			complete = io.TextIOWrapper(open(curr_dir + "results/text_files/complete.txt", "wb", 0), write_through=True)
-			complete.seek(0); complete.write("{}".format("COMPLETED"))
-			complete.close()
-
 	finally:
 
+		if t >= T and Mpi.get_rank() == 0:
+			print(BLUE % 'vanDANA solver - COMPLETED : t = {}'.format(t), "\n", flush = True)
+			complete = io.TextIOWrapper(open(curr_dir + "results/complete", "wb", 0), write_through=True)
+			complete.seek(0); complete.write("{}".format("COMPLETED"))
+			complete.close()
+		
 		memory('Final memory use')
 		print(RED % 'Total memory usage of solver = {} MB (RSS)'.format(str(memory.memory - initial_memory_use)), "\n", flush = True)    
 		wall_time = timer_total.stop()
@@ -503,7 +561,7 @@ def vanDANA_solver(args):
 		    text_file_handles[3].write("{} {} {} {} {}".format("\n\n", "Total memory usage of solver : ", str(memory.memory - initial_memory_use), "MB (RSS)", "\n\n\n"))
 		    text_file_handles[3].write(timings(TimingClear.keep, [TimingType.wall]).str(True))
 
-		print(BLUE % "Total simulation wall time : {} sec".format(wall_time), "\n", flush = True)
+		print(RED % "Total simulation wall time : {} sec".format(wall_time), "\n", flush = True)
 
 		for x in text_file_handles:
 		    x.close()
@@ -518,7 +576,7 @@ def vanDANA_solver(args):
 
 	# --------------------------------------------------------------------------------- 
 	
-
+	
 
 if __name__ == '__main__':
 	

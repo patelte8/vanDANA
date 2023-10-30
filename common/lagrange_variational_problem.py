@@ -38,7 +38,6 @@ class Lagrange_multiplier_problem:
 
 		self.us_ = us_
 		self.F = [Y, M, Z2]
-		self.us_ = Function(Y)
 		self.nx = tensors.unit_vector(0, dim)
 		self.ny = tensors.unit_vector(1, dim)
 		self.variables = variables
@@ -51,10 +50,8 @@ class Lagrange_multiplier_problem:
 
 		e = self.e; Lm = self.Lm; dx = self.dx
 
-		vector_assign_in_parallel(self.us_, us_)
-
 		a6 = assemble(dot(Lm, e)*dx)
-		b6 = assemble((1/dt)*dot(self.us_ - uf_, e)*dx + dot(Lm_[1], e)*dx)
+		b6 = assemble((1/dt)*dot(us_ - uf_, e)*dx + dot(Lm_[1], e)*dx)
 
 		return a6, b6
 
@@ -73,8 +70,7 @@ class Lagrange_multiplier_problem:
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[6].write("{} {} {} {} {} {}" \
-		        .format(t, "  ", drag, "  ", lift, "\n"))	
+		    text_file_handles[6].write(f"{t:0,.10G}		{drag:0,.10G}		{lift:0,.10G}\n")
 
 
 
@@ -156,4 +152,4 @@ class Solid_temperature_lagrange_multiplier_problem:
 
 		Mpi.set_barrier()
 		if Mpi.get_rank() == 0:
-		    text_file_handles[8].write("{} {} {} {}".format(t, "  ", average_nusselt, "\n"))				
+		    text_file_handles[8].write(f"{t:0,.10G}		{average_nusselt:0,.10G}\n")				
