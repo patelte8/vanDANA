@@ -54,7 +54,7 @@ class CustomSolver(NewtonSolver):
         PETScOptions.set("pc_hypre_boomeramg_max_iter", 1)
         PETScOptions.set("pc_hypre_boomeramg_cycle_type", "v")
         PETScOptions.set("error_on_nonconvergence", True)
-        PETScOptions.set("maximum_iterations",  50)
+        PETScOptions.set("maximum_iterations",  20)
 
         self.linear_solver().set_from_options()
 
