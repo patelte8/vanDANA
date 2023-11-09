@@ -47,14 +47,16 @@ class CustomSolver(NewtonSolver):
         PETScOptions.set("ksp_type", solid_momentum_solver['solver_type'])
         # PETScOptions.set("ksp_monitor_true_residual")
         # PETScOptions.set("ksp_view")
+        # PETScOptions.set("ksp_converged_reason")
+        PETScOptions.set("ksp_knoll")
         PETScOptions.set("ksp_rtol", 1.0e-5)
-        PETScOptions.set("Ksp_atol", 1.0e-15)
+        PETScOptions.set("Ksp_atol", 1.0e-30)
         PETScOptions.set("pc_type", "hypre")
         PETScOptions.set('pc_hypre_type', 'boomeramg')
         PETScOptions.set("pc_hypre_boomeramg_max_iter", 1)
         PETScOptions.set("pc_hypre_boomeramg_cycle_type", "v")
         PETScOptions.set("error_on_nonconvergence", True)
-        PETScOptions.set("maximum_iterations",  20)
+        PETScOptions.set("ksp_max_it", 5000)
 
         self.linear_solver().set_from_options()
 
@@ -71,6 +73,11 @@ class Solid_problem:
 
 		mesh = solid_mesh.mesh
 		dim = mesh.geometry().dim()
+
+		self.custom_solver = CustomSolver(mesh)
+		self.custom_solver.parameters.update(solid_displacement_custom_solver_parameters)
+
+		# --------------------------------
 
 		R1 = VectorElement('P', mesh.ufl_cell(), fem_degree['displacement_degree'])        
 		T1 = FiniteElement('P', mesh.ufl_cell(), fem_degree['pressure_degree'])                          # Solid pressure 
@@ -166,15 +173,14 @@ class Solid_problem:
 
 		elif compressible_solid == True:
 
+			J = derivative(a5, Dp_)
+
 			if custom_newtons_solver == True:
-				J = derivative(a5, Dp_)
 				momentum = Solid_momentum(J, a5, bcs)
-				custom_solver = CustomSolver(mesh)
-				custom_solver.parameters.update(solid_displacement_custom_solver_parameters)
-				custom_solver.solve(momentum, Dp_.vector())
+				self.custom_solver.solve(momentum, Dp_.vector())
 
 			else:
-				solve(a5 == 0, Dp_, bcs, solver_parameters = solid_displacement_parameters,
+				solve(a5 == 0, Dp_, bcs, J=J, solver_parameters = solid_displacement_parameters,
 				      					form_compiler_parameters = FFC_parameters)
 
 			# Note to self: if it's a compressible solid, solid pressure is the same as fluid pressure

@@ -26,7 +26,7 @@ def vanDANA_solver(args):
 
 	memory = MemoryUsage('Start')
 	curr_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
-	remove_killvanDANA(curr_dir)	
+	remove_killvanDANA(curr_dir); remove_complete(curr_dir)	
 
 	# MPI-initialize / terminal printing controls
 	Mpi = MPI_Manage()
@@ -545,7 +545,7 @@ def vanDANA_solver(args):
 		if t >= T and Mpi.get_rank() == 0:
 			print(BLUE % 'vanDANA solver - COMPLETED : t = {}'.format(t), "\n", flush = True)
 			complete = io.TextIOWrapper(open(curr_dir + "results/complete", "wb", 0), write_through=True)
-			complete.seek(0); complete.write("{}".format("COMPLETED"))
+			complete.seek(0); complete.write("{}, T = {}".format("COMPLETED", T))
 			complete.close()
 		
 		memory('Final memory use')

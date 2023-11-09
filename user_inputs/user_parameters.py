@@ -63,7 +63,7 @@ physical_parameters = dict(
 		rho_s = 10,								# Density (kg/m3)
 		Sm = 0,									# Shear modulus (N/m2)
 		Ld = 0,									# Compressibility (N/m2) ... only for neoHookean
-		nw = 0.4,								# Poissons ratio ... only for linearelastic
+		nw = 0.4,								# Poissons ratio ... only for linearelastic (nw != 0.5, cannot be perfectly incompressible)
 		Spht_s = 0.11,							# Specific heat (J/kg.C)
 		K_s = 1.2 								# Thermal conductivity (W/m.C)
 	)

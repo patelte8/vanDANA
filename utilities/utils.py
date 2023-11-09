@@ -25,6 +25,14 @@ def remove_killvanDANA(directory):
     except:
         pass
 
+# Remove complete file
+def remove_complete(directory):
+    try:
+        os.remove(path.join(directory, "results/complete"))
+    except:
+        pass
+
+
 
 
 # MPI utility

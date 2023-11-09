@@ -34,7 +34,7 @@ def sigma(Re, u, p):
 def stress_lr_elastic_inc(D_R, ps_R, Sm): 
     
     B = F(D_R)
-    return -1*ps_R*inv(B) + 2*Sm*inv(B)*E(B)  
+    return (-1*ps_R + 2*Sm*E(B))*inv(B)   
 
 # Define solid stress : compressible
 def stress_lr_elastic_c(D_R, Nw, Sm): 
@@ -42,7 +42,7 @@ def stress_lr_elastic_c(D_R, Nw, Sm):
     B = F(D_R)
     lame1 = (2*Sm*Nw)/(1-(2*Nw))
 
-    return lame1*tr(E(B))*inv(B) + 2*Sm*inv(B)*E(B)
+    return (lame1*tr(E(B)) + 2*Sm*E(B))*inv(B)
 
 # Neohookean material
 # ----------------------------------------------------------
