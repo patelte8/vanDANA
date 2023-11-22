@@ -35,7 +35,11 @@ cfg['compiler_args']  = ['-std=c++11', '-DHAS_MPI']
 using namespace dolfin;
 namespace py = pybind11;
 
+// Global variables
 std::unordered_map<std::size_t, std::size_t> dof_component_map_f1, dof_component_map_f2, dof_component_map_s1, dof_component_map_s2;
+std::vector<std::vector<double>> bounding_boxes;
+std::vector<double> x_1(6);
+double h = 0.0;
 
 /// Comparison operator for hashing coordinates. Note that two
 // coordinates are considered equal if equal to within specified
@@ -149,17 +153,15 @@ std::vector<double> create_mini_bounding_box(const std::vector<double>& point, d
   return m_m;
 }
 
-
-std::vector<double> create_bounding_box(const MPI_Comm mpi_comm, const Mesh& mesh0, const Mesh& mesh1, double& h, const std::size_t gdim, std::string meshid)
+void create_bounding_box(const Mesh& mesh1)
 {
-  std::vector<double> coordinates;
+  // Get communicator
+  const MPI_Comm mpi_comm = mesh1.mpi_comm();
 
-  if (meshid == "F")
-    coordinates = mesh0.coordinates();
-  if (meshid == "S")
-    coordinates = mesh1.coordinates();
-  
-  std::size_t num_processes = dolfin::MPI::size(mpi_comm);
+  std::vector<double> coordinates;
+  coordinates = mesh1.coordinates();
+
+  const std::size_t gdim = mesh1.geometry().dim();
   std::vector<double> x_min_max(2*gdim);
   
   for (std::size_t i = 0; i < gdim; ++i)
@@ -172,17 +174,22 @@ std::vector<double> create_bounding_box(const MPI_Comm mpi_comm, const Mesh& mes
   {
       for (auto it = coordinates.begin() + i; it < coordinates.end(); it += gdim)
       {
-      x_min_max[i]        = std::min(x_min_max[i], *it);
-      x_min_max[gdim + i] = std::max(x_min_max[gdim + i], *it);
+        x_min_max[i]        = std::min(x_min_max[i], *it);
+        x_min_max[gdim + i] = std::max(x_min_max[gdim + i], *it);
       }
   }
 
-  // Communicate bounding boxes
-  std::vector<std::vector<double>> bounding_boxes;
+  // Extending bounding boxes of mesh by 3*h to determine points for MPI
+  for (std::size_t i = 0; i < gdim; ++i)
+  {
+      x_min_max[i]        -= 3.0*h;
+      x_min_max[gdim + i] += 3.0*h;
+  }
+
+   // Communicate bounding boxes
   dolfin::MPI::all_gather(mpi_comm, x_min_max, bounding_boxes);
   
   // Create overall bounding box for solid mesh across processes
-  std::vector<double> x_1(2*gdim);
   for (std::size_t i = 0; i < gdim; ++i)
   {
     for (auto it = bounding_boxes[0].begin() + i; it < bounding_boxes[0].end(); it += gdim)
@@ -192,6 +199,7 @@ std::vector<double> create_bounding_box(const MPI_Comm mpi_comm, const Mesh& mes
     }
   }
 
+  std::size_t num_processes = dolfin::MPI::size(mpi_comm);
   for(std::size_t p = 0; p < num_processes; p++)
   {
     for (std::size_t i = 0; i < gdim; ++i)
@@ -203,60 +211,40 @@ std::vector<double> create_bounding_box(const MPI_Comm mpi_comm, const Mesh& mes
         }
     }
   }
+  
+}
+
+void calculate_fluid_mesh_size_h(const Mesh& mesh0)
+{
+  // Get communicator
+  const MPI_Comm mpi_comm = mesh0.mpi_comm();
+
+  const std::size_t gdim = mesh0.geometry().dim();
 
   // Calculate eulerian meshsize
   std::vector<double> x(gdim);
   double h_local;
-  double minh = 10000;
-  double maxh = -10000;
-  
-  if (meshid == "F")
-  { 
-      for (EdgeIterator edge(mesh1); !edge.end(); ++edge) 
-      {
-          for (VertexIterator vert(*edge); !vert.end(); ++vert)
-          {   
-              for(std::size_t i = 0; i < gdim; i++)
-                  x[i]=vert->x(i); 
-  
-              if(in_bounding_box(x, bounding_boxes[dolfin::MPI::rank(mpi_comm)], 1e-12))
-              { 
-                  if(edge->length() < minh) {minh = edge->length();};
-                  if(edge->length() > maxh) {maxh = edge->length();};
-              }
-          }
-      }
-  }
-  
-  else if (meshid == "S")
-  {
-      for (EdgeIterator edge(mesh0); !edge.end(); ++edge)
-      {
-          for (VertexIterator vert(*edge); !vert.end(); ++vert)
-          {    
-              for(std::size_t i = 0; i < gdim; i++)
-                  x[i]=vert->x(i);
+  double minh = 100000;
+  double maxh = -100000;
 
-              if(in_bounding_box(x, bounding_boxes[dolfin::MPI::rank(mpi_comm)], 1e-12))
-              { 
-                  if(edge->length() < minh) {minh = edge->length();};
-                  if(edge->length() > maxh) {maxh = edge->length();};
-              }
-          }   
-      }
+  for (EdgeIterator edge(mesh0); !edge.end(); ++edge)
+  {
+      for (VertexIterator vert(*edge); !vert.end(); ++vert)
+      {    
+          for(std::size_t i = 0; i < gdim; i++)
+              x[i]=vert->x(i);
+
+          if(in_bounding_box(x, bounding_boxes[dolfin::MPI::rank(mpi_comm)], 1e-12))
+          { 
+              if(edge->length() < minh) {minh = edge->length();};
+              if(edge->length() > maxh) {maxh = edge->length();};
+          }
+      }   
   }
   
   h_local = minh;
   h = dolfin::MPI::min(mpi_comm, h_local);
 
-  // Extending bounding box of mesh by 3*h to determine points for MPI
-  for (std::size_t i = 0; i < gdim; ++i)
-  {
-      x_1[i]        -= 3.0*h;
-      x_1[gdim + i] += 3.0*h;
-  }
-
-  return x_1;
 }
 
 
@@ -475,9 +463,9 @@ double fraction(const CellType::Type celltype)
 }
 
 std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
-tabulate_coordinates_to_dofs(const FunctionSpace& V, std::vector<double>& x_y)
+tabulate_coordinates_to_dofs(const FunctionSpace& V)
 {
-    std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
+  std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
     coords_to_dofs(lt_coordinate(1.0e-12));
 
   // Extract mesh, dofmap and element
@@ -485,8 +473,14 @@ tabulate_coordinates_to_dofs(const FunctionSpace& V, std::vector<double>& x_y)
   const FiniteElement& element = *V.element();
   const Mesh& mesh = *V.mesh();
 
+  // Get communicator
+  std::size_t num_processes = dolfin::MPI::size(mesh.mpi_comm());
+
   // Geometric dimension
   const std::size_t gdim = mesh.geometry().dim();
+
+  // Local bounding box
+  std::vector<double> x_min_max(2*gdim);
 
   // Loop over cells and tabulate dofs
   boost::multi_array<double, 2> coordinates;
@@ -524,22 +518,30 @@ tabulate_coordinates_to_dofs(const FunctionSpace& V, std::vector<double>& x_y)
         std::copy(coordinates[i].begin(), coordinates[i].end(),
                   coors.begin());
 
-        // Add dof to list at this coord
-        if(in_bounding_box(coors, x_y, 1e-12))
+        for(std::size_t p = 0; p < num_processes; p++)
         {
-          const auto ins = coords_to_dofs.insert
-            (std::make_pair(coors, std::vector<std::size_t>{dof}));
-          if (!ins.second)
-            ins.first->second.push_back(dof);
+          std::copy(bounding_boxes[p].begin(), bounding_boxes[p].end(), x_min_max.begin());          
+
+          // Add dof to list at this coord
+          if(in_bounding_box(coors, x_min_max, 1e-12))
+          {
+            const auto ins = coords_to_dofs.insert
+              (std::make_pair(coors, std::vector<std::size_t>{dof}));
+            if (!ins.second)
+              ins.first->second.push_back(dof);
+
+            break;  
+          }
         }
       }
     }
   }
+
   return coords_to_dofs;
 }
 
 std::map<std::vector<double>, std::pair<std::vector<double>, double>>
-tabulate_coordinates_to_values_and_nodal_volumes(const Function& u0, std::vector<double>& x_x)
+tabulate_coordinates_to_values_and_nodal_volumes(const Function& u0)
 {
 	std::map<std::vector<double>, std::pair<std::vector<double>, double>>
   	coords_to_values_and_nodal_volumes;        
@@ -548,6 +550,12 @@ tabulate_coordinates_to_values_and_nodal_volumes(const Function& u0, std::vector
   const Mesh& mesh0 = *u0.function_space()->mesh();
   const CellType::Type celltype = mesh0.type().cell_type();
   const std::size_t gdim0 = mesh0.geometry().dim();
+
+  // Get communicator
+  std::size_t num_processes = dolfin::MPI::size(mesh0.mpi_comm());
+
+  // Local bounding box
+  std::vector<double> x_min_max(2*gdim0);
 
   // Create arrays used to evaluate points on mesh0
   double nodal_volume;
@@ -563,20 +571,27 @@ tabulate_coordinates_to_values_and_nodal_volumes(const Function& u0, std::vector
 
     u0.eval(_node_val, _node_coord);      // Remember this is a known bug here.
 
-    if(in_bounding_box(node_coord, x_x, 1e-12))
+    for(std::size_t p = 0; p < num_processes; p++)
     {
-  	nodal_volume = 0;
-  	for (CellIterator cell(*vert); !cell.end(); ++cell)
-  	    nodal_volume += (*cell).volume();
+      std::copy(bounding_boxes[p].begin(), bounding_boxes[p].end(), x_min_max.begin());
 
-  	nodal_volume *= fraction(celltype);
+      if(in_bounding_box(node_coord, x_min_max, 1e-12))
+      {
+      	nodal_volume = 0;
+      	for (CellIterator cell(*vert); !cell.end(); ++cell)
+      	    nodal_volume += (*cell).volume();
 
-  	coords_to_values_and_nodal_volumes.insert
-  	  (std::make_pair(node_coord, std::make_pair(node_val, nodal_volume)));	
+      	nodal_volume *= fraction(celltype);
+
+      	coords_to_values_and_nodal_volumes.insert
+      	  (std::make_pair(node_coord, std::make_pair(node_val, nodal_volume)));	
+
+        break;  
+      }
     }
   }
 
-return coords_to_values_and_nodal_volumes;
+  return coords_to_values_and_nodal_volumes;
 }
 
 
@@ -656,22 +671,18 @@ void interpolate_delta(const Function& u0, Function& u, std::string abc, std::st
   Array<double> _node_coord(gdim0, node_coord.data());
   Array<double> _node_val(u0.value_size(), node_val.data());
 
-  // Create bounding box for solid mesh 
-  std::vector<double> x_1(2*gdim0); double h = 0.0;
-  x_1 = create_bounding_box(mpi_comm, mesh0, mesh1, h, gdim0, meshid);
-
   // Create vector to hold all local values of u
   std::vector<double> local_u_vector(u.vector()->local_size());
 
   // Create map from coordinates to dofs sharing that coordinate
   std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
-      coords_to_dofs = tabulate_coordinates_to_dofs(V1, x_1);
+      coords_to_dofs = tabulate_coordinates_to_dofs(V1);
   
   // Map from coordinates to respective values and nodal volumes
   double nodal_volume;
   std::vector<double> m_m(2*gdim0); 
   std::map<std::vector<double>, std::pair<std::vector<double>, double>> 
-      coords_to_values_and_nodal_volumes = tabulate_coordinates_to_values_and_nodal_volumes(u0, x_1);    
+      coords_to_values_and_nodal_volumes = tabulate_coordinates_to_values_and_nodal_volumes(u0);    
 
   // Search this process first for all coordinates in u local mesh
   std::vector<std::vector<double>> all_points(num_processes);
@@ -683,7 +694,7 @@ void interpolate_delta(const Function& u0, Function& u, std::string abc, std::st
 		    std::copy(map_it.first.begin(), map_it.first.end(), x.begin());
 		  
 		   	if (in_bounding_box(x, x_1, 1e-12))
-				all_points[p].insert(all_points[p].end(), x.begin(), x.end());		    
+				  all_points[p].insert(all_points[p].end(), x.begin(), x.end());		    
 		}
 	}
 
@@ -793,6 +804,20 @@ PYBIND11_MODULE(SIGNATURE, m)
   m.def("extract_dof_component_map_user", [](py::object X, py::str flag){
       auto _X = X.attr("_cpp_object").cast<const FunctionSpace &>();
       extract_dof_component_map_user(_X, flag.cast<std::string>());
+  });
+
+  m.def("create_bounding_box", (void (*)(const Mesh&))
+      &create_bounding_box);
+  m.def("create_bounding_box", [](py::object mesh){
+      auto _mesh = mesh.attr("_cpp_object").cast<const Mesh*>();
+      create_bounding_box(*_mesh);
+  });  
+
+  m.def("calculate_fluid_mesh_size_h", (void (*)(const Mesh&))
+      &calculate_fluid_mesh_size_h);
+  m.def("calculate_fluid_mesh_size_h", [](py::object mesh){
+      auto _mesh = mesh.attr("_cpp_object").cast<const Mesh*>();
+      calculate_fluid_mesh_size_h(*_mesh); 
   });
 }    
 

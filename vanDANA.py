@@ -173,6 +173,8 @@ def vanDANA_solver(args):
 	# Delta-interpolation (only required for FSI problems)
 	if problem_physics['solve_FSI'] == True:
 		fsi_interpolation = compile_cpp_code(fsi_interpolation_code)
+		fsi_interpolation.create_bounding_box(solid_mesh.mesh)
+		fsi_interpolation.calculate_fluid_mesh_size_h(fluid_mesh.mesh)
 		fsi_interpolation.extract_dof_component_map_user(FS['fluid'][2], "F")
 		fsi_interpolation.extract_dof_component_map_user(FS['lagrange'][0], "S")
 		if problem_physics['solve_temperature'] == True:
@@ -299,6 +301,9 @@ def vanDANA_solver(args):
 				    # Update current time
 				    t += tsp					
 				
+				if problem_physics['solve_FSI'] == True:
+					fsi_interpolation.create_bounding_box(solid_mesh.mesh)
+
 				# ---------------------------------------------------------------------------------
 
 				# Update boundary conditions : only if time-dependent
@@ -467,6 +472,7 @@ def vanDANA_solver(args):
 						pv2 = write_mesh_H5(Mpi.mpi_comm, result_folder.folder, solid_mesh.mesh, "solid_current_mesh")
 						pv2.write_mesh_H5_boundaries(boundaries)
 						pv2.write_mesh_H5_subdomains(subdomains)
+						pv2.hdf.close()
 						
 						timeseries.store(solid_mesh.mesh, t)
 
@@ -577,7 +583,6 @@ def vanDANA_solver(args):
 	# --------------------------------------------------------------------------------- 
 	
 	
-
 if __name__ == '__main__':
 	
 	# parsing arguments from command line
