@@ -333,7 +333,7 @@ def vanDANA_solver(args):
 				# PISO inner loop
 				p_inner.assign(p_[1]); u_diff = 1e8
 				while inner_iter < piso_iter:
-					if u_diff > piso_tol:
+					if u_diff > -1.0: # piso_tol:
 
 						inner_iter += 1; u_diff = 0.0
 						for ui in range(u_components):
