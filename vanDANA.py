@@ -534,6 +534,7 @@ def vanDANA_solver(args):
 						text_file_handles[3].truncate(0); text_file_handles[3].seek(0)
 						text_file_handles[3].write("#Time		#Step_1			#Step_2			#Step_3			#Step_4			#Step_5			#Step_6			#Step_7			#Step_interpolation	#Step_move_mesh		#Step_remeshing\n")
 						text_file_handles[3].write(f"{t:0,.10G}		{s1:0,.10G}		{s2:0,.10G}		{s3:0,.10G}		{s4:0,.10G}		{s5:0,.10G}		{s6:0,.10G}		{s7:0,.10G}		{si:0,.10G}		{sm:0,.10G}		{sr:0,.10G}\n\n")
+						if t < 0.99*T: text_file_handles[3].write(timings(TimingClear.keep, [TimingType.wall]).str(True))
 
 				s_dt += timer_dt.stop()
 
