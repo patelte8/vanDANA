@@ -2,7 +2,7 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import solid_displacement_parameters, FFC_parameters, \
+from .solver_options import solid_displacement_parameters, snes_solver_parameters, line_search_solver, FFC_parameters, \
 							solid_displacement_custom_solver_parameters, solid_momentum_solver, custom_newtons_solver
 from .constitutive_eq import *
 import sys
@@ -174,13 +174,18 @@ class Solid_problem:
 		elif compressible_solid == True:
 
 			J = derivative(a5, Dp_)
+			print("Condition number of Jacobian matrix : ", condition_number(J), flush=True)
 
 			if custom_newtons_solver == True:
 				momentum = Solid_momentum(J, a5, bcs)
 				self.custom_solver.solve(momentum, Dp_.vector())
 
 			else:
-				solve(a5 == 0, Dp_, bcs, J=J, solver_parameters = solid_displacement_parameters,
+				
+				solver_parameter = solid_displacement_parameters
+				if line_search_solver == True: solver_parameter = snes_solver_parameters
+
+				solve(a5 == 0, Dp_, bcs, J=J, solver_parameters = solver_parameter,
 				      					form_compiler_parameters = FFC_parameters)
 
 			# Note to self: if it's a compressible solid, solid pressure is the same as fluid pressure

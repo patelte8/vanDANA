@@ -418,3 +418,34 @@ def update_variables(update, u_components, problem_physics):
              
             Ts_[1].assign(Ts_[0])
             LmTs_[1].assign(LmTs_[0])
+
+
+# Compute eigen value
+def compute_eig0(solver, neig_min=1, neig_max=1000):
+    neig = neig_min
+    ret = None
+    while True:
+        neig = min(neig, neig_max)
+        solver.solve(neig)
+        try:
+            ret = solver.get_eigenvalue(0)
+            break
+        except Exception:
+            pass
+        if neig >= neig_max:
+            raise f"Reached neig_max = {neig_max}"
+        neig = 2*neig
+    return ret
+
+
+# Compute condition number of matrix
+def condition_number(X):
+    A = PETScMatrix()
+    assemble(X, tensor=A)
+    eigenSolver = SLEPcEigenSolver(A)
+    eigenSolver.parameters["spectrum"]="smallest magnitude"
+    eigen_min, _ = compute_eig0(eigenSolver)
+
+    eigenSolver.parameters["spectrum"]="largest magnitude"
+    eigen_max, _ = compute_eig0(eigenSolver)
+    return abs(eigen_max / eigen_min)

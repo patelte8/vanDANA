@@ -13,6 +13,7 @@ krylov_solvers=dict(
     absolute_tolerance=1e-8)
 
 custom_newtons_solver = True
+line_search_solver = False
 
 # Solver dictionaries
 tentative_velocity_solver=dict(
@@ -68,3 +69,14 @@ solid_displacement_parameters = {"newton_solver":{"linear_solver":solid_momentum
 # used only if its a custom newtons solver for compressible solid 
 solid_displacement_custom_solver_parameters = {"absolute_tolerance":1e-15, "relative_tolerance":1e-6, "convergence_criterion":'residual', \
                                                "maximum_iterations":20, "report":True, "error_on_nonconvergence":True} #, "relaxation_parameter":1.0}
+
+snes_solver_parameters = {"nonlinear_solver": "snes",
+                          "symmetric": True,
+                          "snes_solver": {"maximum_iterations": 10,
+                                          "report": True,
+                                          "line_search": "bt",
+                                          "linear_solver": "mumps",
+                                          "method": "newtonls",
+                                          "absolute_tolerance": 1e-9,
+                                          "relative_tolerance": 1e-7,
+                                          "error_on_nonconvergence": False}}
