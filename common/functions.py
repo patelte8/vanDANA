@@ -372,7 +372,7 @@ def calc_runtime_stats_timestep(Mpi, u, u_components, u_diff, t, tsp, text_file_
     if time_control['adjustable_timestep'] == True:
 
         if C_no_real > time_control['C_no']:
-            if C_no_real > 0.8:
+            if C_no_real > 5.0:
                 tsp = round_decimals_down((time_control['C_no'])/DN, 5)
             else:
                 tsp = round_decimals_down((0.4*time_control['C_no'] + 0.6*C_no_real)/DN, 5)
