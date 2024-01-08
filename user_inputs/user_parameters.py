@@ -93,7 +93,7 @@ characteristic_scales = dict(
 # ---------------------------------------------------------------------
 time_control = dict(
 
-		C_no = 0.8,								# Set Courant number (recommended : C_no < 1.0, max possible is 5.0)
+		C_no = 0.8,								# Set Courant number (recommended - for time accuracy : C_no < 1.0, max possible is 5.0)
 		dt = 0.005,  							# Time-step: constant throughout runtime if adjustable-timestep is "False"
 		T = 100,								# Total runtime
 		adjustable_timestep = True 				# Calculate variable time-step using C_no : used to accelerate temporal solution
