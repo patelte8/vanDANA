@@ -174,7 +174,7 @@ class Solid_problem:
 		elif compressible_solid == True:
 
 			J = derivative(a5, Dp_)
-			print("Condition number of Jacobian matrix : ", condition_number(J), flush=True)
+			# print("Condition number of Jacobian matrix : ", condition_number(J), flush=True)
 
 			if custom_newtons_solver == True:
 				momentum = Solid_momentum(J, a5, bcs)
