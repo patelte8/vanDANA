@@ -77,7 +77,7 @@ def vanDANA_solver(args):
 	# ---------------------------------------------------------------------------------
 
 	# Predict initial time-step
-	if time_control['C_no'] > 0.8:	time_control.update(C_no = 0.8)
+	if time_control['C_no'] > 5.0:	time_control.update(C_no = 5.0)
 	if time_control['adjustable_timestep'] == True:
 	    initial_time_step = round_decimals_down(0.2*hmin_f, 5)
 	    time_control.update(dt = initial_time_step)     
