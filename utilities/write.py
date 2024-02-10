@@ -144,7 +144,7 @@ class create_result_folder:
 
 		if self.restart == False and my_rank == 0:
 			text_file_handles[0].write("#Time		#Drag			#Lift\n")
-			text_file_handles[1].write("#Time             #Timestep         #Max cell_Courant_no.  #Max cell_Re         #PISO velocity_error\n")
+			text_file_handles[1].write("#Time             #Timestep         #PISO velocity_error     #Max cell_Re         #Max Convection_CFL  #Max Viscous_CFL     #Max Conduction_CFL\n")
 			try:
 				text_file_handles[4].write("#Time		#Average_nusselt_no.\n")
 				text_file_handles[5].write("#Time		#Drag			#Lift			#Volume\n")

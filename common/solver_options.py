@@ -40,6 +40,8 @@ if custom_newtons_solver == True:
 
 # -----------------------------------------------------------------------------------------
 
+piso_iterations = 2                         # no. of PISO iterations
+
 # Define tentative_velocity_solver
 precond = PETScPreconditioner(tentative_velocity_solver['preconditioner_type'])
 u_solver = PETScKrylovSolver(tentative_velocity_solver['solver_type'], precond)

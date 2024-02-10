@@ -6,6 +6,7 @@ from .solver_options import u_solver, p_solver, \
 							u_solver_c
 from .constitutive_eq import *
 from .fem_stabilizations import *
+import numpy as np
 import sys
 
 sys.path.insert(0,  '..')
@@ -98,6 +99,9 @@ class Fluid_problem:
 		self.bool_stream = bool_stream
 		self.h_f = CellDiameter(mesh)
 		self.h_f_X = project(self.h_f, FunctionSpace(mesh, 'P', 1))
+		vertex_values_h_f_X = self.h_f_X.compute_vertex_values(mesh)
+		vn = np.max(1/(vertex_values_h_f_X))
+		self.VN_local = vn*vn
 		
 		self.F = [V, Q, Z1]
 		self.dx = Measure("dx", domain=mesh)

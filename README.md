@@ -15,6 +15,8 @@ The FSI solver is based on the [Distibuted Langrange Multiplier based Fictitious
   The classical Turek benchmark (FSI2)
 </p>
 
+vanDANA provides excellent control for spatial and temporal accuracy for any type of Flow-thermal FSI simulation. Some of the key features are : PISO loop for pressure-velocity coupling, stabilization schemes, P1/P1/P1 elements, adaptive time control & different constitutive laws for solid behavior.
+
 ## License
 
 vanDANA (all versions) is licensed under the GNU GPL and is Copyright (2022) by the authors.
@@ -50,7 +52,7 @@ sudo singularity build <container_name>.img fenics_2019_dev
 
 For an introduction and tutorial to vanDANA code, please refer to the [documentation](https://deepnote.com/@research-2834/vanDANA-User-Manual-dcbd70e8-f8a8-4cc9-84ba-10cbae5aa5a5).
 
-If you wish to use vanDANA for research, please cite this [article](https://doi.org/10.1016/j.compbiomed.2023.106766).
+If you wish to use vanDANA for research, please cite this [article](https://www.proquest.com/openview/df712229f19ffd51c319327628247589/1?pq-origsite=gscholar&cbl=18750&diss=y).
 
 ## Authors
 

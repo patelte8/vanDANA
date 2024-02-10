@@ -42,7 +42,7 @@ def stress_lr_elastic_c(D_R, Nw, Sm):
     B = F(D_R)
     lame1 = (2*Sm*Nw)/(1-(2*Nw))
 
-    return lame1*tr(E(B))*inv(B) + 2*Sm*inv(B)*E(B)
+    return J(B)*(lame1*tr(E(B))*inv(B) + 2*Sm*inv(B)*E(B))
 
 # Neohookean material
 # ----------------------------------------------------------

@@ -49,10 +49,12 @@ def vanDANA_solver(args):
 
 	# Calculate non-dimensional numbers
 	Re, Pr, Ec, Fr = calc_non_dimensional_numbers(**physical_parameters, **characteristic_scales)
-	Pe = Re*Pr     
+	Pe = Re*Pr
+	thermal_diff_ratio = 1                             # alpha_s/alpha_f     
 	if not problem_physics['viscous_dissipation'] : Ec = 0.0
-	if problem_physics['solve_FSI'] or problem_physics['solve_temperature'] == True:
+	if problem_physics['solve_FSI'] == True:
 	    rho, Spht, K, Ld, Nw, Sm = calc_non_dimensional_solid_properties(**physical_parameters, **characteristic_scales)
+	    thermal_diff_ratio = K/(rho*Spht)
 
 	# ---------------------------------------------------------------------------------   
 
@@ -76,16 +78,6 @@ def vanDANA_solver(args):
 
 	# ---------------------------------------------------------------------------------
 
-	# Predict initial time-step
-	if time_control['C_no'] > 5.0:	time_control.update(C_no = 5.0)
-	if time_control['adjustable_timestep'] == True:
-	    initial_time_step = round_decimals_down(0.2*hmin_f, 5)
-	    time_control.update(dt = initial_time_step)     
-	tsp = dt = time_control['dt']
-	T = time_control['T']
-	dt = Constant(dt)
-
-	Mpi.set_barrier()
 	print("\nFluid mesh specs | edge length: Max =",hmax_f, "; Min =",hmin_f, flush = True)
 	print(GREEN % "\nReynolds number = {}".format(Re), flush = True)
 	print(GREEN % "Froude number = {}".format(Fr), \
@@ -109,13 +101,31 @@ def vanDANA_solver(args):
 		    print(GREEN % "Specific heat ratio = {}".format(Spht), flush = True)
 		    print(GREEN % "Conductivity ratio = {}".format(K), flush = True)
 
+	# ---------------------------------------------------------------------------------
+	
+	# Time step settings
+	Mpi.set_barrier()
+	if time_control['C_no'] > 5.0:	time_control.update(C_no = 5.0)
+	if time_control['C_vi'] > 30.0:	time_control.update(C_vi = 30.0)
+	if problem_physics['solve_temperature'] == True:
+		if time_control['C_kn'] > min(time_control['C_vi']/Pr, thermal_diff_ratio*time_control['C_vi']/Pr):	
+			time_control.update(C_kn = min(time_control['C_vi']/Pr, thermal_diff_ratio*time_control['C_vi']/Pr))
+	if time_control['adjustable_timestep'] == True:
+	    initial_time_step = round_decimals_down(0.2*hmin_f, 5)
+	    time_control.update(dt = initial_time_step)     
+	tsp = dt = time_control['dt']
+	T = time_control['T']
+	dt = Constant(dt)
+
+	if problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}, Conduction = {}".format(time_control['C_no'], time_control['C_vi'], time_control['C_kn']), flush = True)
+	if not problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}".format(time_control['C_no'], time_control['C_vi']), flush = True)
 	if restart == False: print(RED % "\nInitial time_step = {}".format(tsp), flush = True)
 	print(RED % "Total time = {}".format(T), "\n", flush = True)
-
-	# ---------------------------------------------------------------------------------
 	                       
 	# Create output folder
 	result_folder = create_result_folder(curr_dir, restart, dim, calc_stream_function)
+
+	# ---------------------------------------------------------------------------------
 
 	# Initialize flow problem
 	flow = Fluid_problem(fluid_mesh, result_folder.bool_stream); FS = dict(fluid = flow.F) 
@@ -191,7 +201,7 @@ def vanDANA_solver(args):
 	t = 0
 
 	piso_tol = 1e-3											# tolerance for PISO loop
-	piso_iter = 2 											# no. of PISO interations
+	piso_iter = piso_iterations								# no. of PISO iterations
 	recovering = False; no_consecutive_recovers = 0 		# recovery variables
 	counters = create_counters(5)   						# enter number of counters required
 
@@ -453,7 +463,7 @@ def vanDANA_solver(args):
 			else: 
 		
 				# Update progress on terminal
-				print(' '*100 + "Progress : " + str((t/T)*100) + " %", flush = True)
+				print("Time : t =", round_decimals_down(t, 5), '\t'*12 + "Progress : " + str(round_decimals_down((t/T)*100, 5)) + " %", flush = True)
 				
 				# Print output files
 				if counters[0] >= print_control['a']:
@@ -496,7 +506,7 @@ def vanDANA_solver(args):
 				if counters[4] >= print_control['e']:    
 
 					reset_counter(counters, 4)
-					tsp = calc_runtime_stats_timestep(Mpi, u_[0], u_components, u_diff, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, flow.Re, time_control)
+					tsp = calc_runtime_stats_timestep(Mpi, problem_physics, u_[0], u_components, u_diff, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, Re, Pr, thermal_diff_ratio, flow.VN_local, time_control)
 					dt  = Constant(tsp)         
 
 				# ---------------------------------------------------------------------------------     
