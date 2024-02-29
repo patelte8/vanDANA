@@ -123,7 +123,9 @@ def extract_hdf5_data_for_xdmf_visualization(mpi_comm, curr_dir, bool_stream, pr
 	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "ps", "file_s.h5", fem_degree['pressure_degree'], "pressure_solid", "s", False)
 	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "J", "file_s.h5", fem_degree['pressure_degree'], "Jacobian", "s", False)
 	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Lm", "file_s.h5", fem_degree['lagrange_degree'], "lagrange-multiplier", "v", False)
-	    extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Ts", "file_s.h5", fem_degree['temperature_degree'], "temperature_solid", "s", False)
+	    
+	    if problem_physics['solve_temperature'] == True:
+	    	extract_hdf5_to_xdmf(mpi_comm, curr_dir, "Ts", "file_s.h5", fem_degree['temperature_degree'], "temperature_solid", "s", False)
 
 
 
