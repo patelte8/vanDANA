@@ -120,7 +120,6 @@ def vanDANA_solver(args):
 	if problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}, Conduction = {}".format(time_control['C_no'], time_control['C_vi'], time_control['C_kn']), flush = True)
 	if not problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}".format(time_control['C_no'], time_control['C_vi']), flush = True)
 	if restart == False: print(RED % "\nInitial time_step = {}".format(tsp), flush = True)
-	print(RED % "Total time = {}".format(T), "\n", flush = True)
 	                       
 	# Create output folder
 	result_folder = create_result_folder(curr_dir, restart, dim, calc_stream_function)
@@ -262,8 +261,9 @@ def vanDANA_solver(args):
 	if restart == True:
 	    t, tsp = read_restart_files(result_folder.folder, Mpi.mpi_comm, text_file_handles[2], **restart_read_variables) 
 	    dt = Constant(tsp)
-	    print(RED % "Restart time_step = {}".format(tsp), flush = True)
-
+	    print(RED % "\nRestart time_step = {}".format(tsp), flush = True)
+	print(RED % "Total time = {}".format(T), "\n", flush = True)
+	
 	# ---------------------------------------------------------------------------------         
 
 	# Calculate Total DOF's solved
@@ -560,7 +560,7 @@ def vanDANA_solver(args):
 	finally:
 
 		if t >= T and Mpi.get_rank() == 0:
-			print(BLUE % 'vanDANA solver - COMPLETED : t = {}'.format(t), "\n", flush = True)
+			print(BLUE % '\nvanDANA solver - COMPLETED : t = {}'.format(t), "\n", flush = True)
 			complete = io.TextIOWrapper(open(curr_dir + "results/complete", "wb", 0), write_through=True)
 			complete.seek(0); complete.write("{}, T = {}".format("COMPLETED", T))
 			complete.close()
@@ -571,7 +571,7 @@ def vanDANA_solver(args):
 
 		Mpi.set_barrier() 
 		if Mpi.get_rank() == 0: 
-		    text_file_handles[3].write("{} {} {}".format("\n", "DOFs -->", json.dumps(DOFS)))
+		    text_file_handles[3].write("{} {} {}".format("\n\n", "DOFs -->", json.dumps(DOFS)))
 		    text_file_handles[3].write("{} {} {}".format("\n\n", "Total number of tasks : ", Mpi.size))
 		    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total simulation wall time : ", wall_time, " sec"))
 		    text_file_handles[3].write("{} {} {} {}".format("\n\n", "Total intitial memory usage for setting up & assembly of the problem : ", initial_memory_use, "MB (RSS)"))
