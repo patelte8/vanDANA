@@ -77,8 +77,8 @@ snes_solver_parameters = {"nonlinear_solver": "snes",
                           "snes_solver": {"maximum_iterations": 10,
                                           "report": True,
                                           "line_search": "bt",
-                                          "linear_solver": "mumps",
+                                          "linear_solver": "bicgstab",
                                           "method": "newtonls",
                                           "absolute_tolerance": 1e-9,
                                           "relative_tolerance": 1e-7,
-                                          "error_on_nonconvergence": False}}
+                                          "error_on_nonconvergence": True}}
