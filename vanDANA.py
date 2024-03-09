@@ -455,7 +455,7 @@ def vanDANA_solver(args):
 				dt = Constant(tsp)
 
 				if no_consecutive_recovers > 5:
-					print(BLUE % 'vanDANA solver - TERMINATED : t = {}, due to five consecutive recovers'.format(t), "\n", flush = True)
+					print(BLUE % '\nvanDANA solver - TERMINATED : t = {}, due to five consecutive recovers'.format(t), "\n", flush = True)
 					break
 				else:
 					continue		
