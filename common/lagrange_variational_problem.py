@@ -4,7 +4,7 @@ from .functions import *
 import sys
 
 sys.path.insert(0,  '..')
-from user_inputs.user_parameters import *
+from user_inputs import *
 from utilities.read import *
 
 

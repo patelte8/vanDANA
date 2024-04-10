@@ -9,9 +9,7 @@ import numpy as np
 import sys
 
 sys.path.insert(0,  '..')
-from user_inputs.user_parameters import *
-from user_inputs.boundary_initial_conditions import *
-from user_inputs.problem_specific import *
+from user_inputs import *
 from utilities.read import *
 
 
