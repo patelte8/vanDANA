@@ -2,8 +2,7 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import u_solver, p_solver, \
-							u_solver_c
+from .solver_options import u_solver, p_solver, u_solver_c
 from .constitutive_eq import *
 from .fem_stabilizations import *
 import numpy as np
@@ -11,7 +10,8 @@ import sys
 
 sys.path.insert(0,  '..')
 from user_inputs.user_parameters import *
-from user_inputs.boundary_initial_conditions import constrained_domain
+from user_inputs.boundary_initial_conditions import *
+from user_inputs.problem_specific import *
 from utilities.read import *
 
 
