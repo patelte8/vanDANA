@@ -1,4 +1,5 @@
 from dolfin import PETScPreconditioner, PETScKrylovSolver, PETScOptions
+from user_inputs import *
 
 # Form compiler parameters
 FFC_parameters = {"representation": 'uflacs', "optimize": True, "cpp_optimize": True, "quadrature_degree": 5, "cpp_optimize_flags": "-O3"}
@@ -11,9 +12,6 @@ krylov_solvers=dict(
     nonzero_initial_guess=True,
     maximum_iterations=300,
     absolute_tolerance=1e-8)
-
-custom_newtons_solver = True
-line_search_solver = False
 
 # Solver dictionaries
 tentative_velocity_solver=dict(
@@ -33,7 +31,13 @@ energy_conservation_solver=dict(
     preconditioner_type='jacobi')
 
 solid_momentum_solver=dict(
-    solver_type='bicgstab')                 # Use 'mumps' (direct solver), if solid is incompressible
+    solver_type='bicgstab')                 
+
+if problem_physics['compressible_solid'] == False:
+    solid_momentum_solver.update(solver_type='mumps')               # Use 'mumps' (direct solver), if solid is incompressible
+
+custom_newtons_solver = True
+line_search_solver = False
 
 if custom_newtons_solver == True:
     solid_momentum_solver.update(solver_type='bcgs')

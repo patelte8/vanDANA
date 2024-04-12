@@ -237,7 +237,9 @@ def vanDANA_solver(args):
 
 	xdmf_file_handles, hdf5_file_handles = result_folder.create_files(files, Mpi.mpi_comm)
 	text_file_handles = result_folder.create_text_files(text_files, Mpi.my_rank)
-	result_folder.write_header_text_files(text_file_handles, Mpi.my_rank) 	
+	result_folder.write_header_text_files(text_file_handles, Mpi.my_rank)
+
+	if restart == False: write_solution_files(problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)  	
 
 	# --------------------------------------------------------------------------------- 
 
@@ -473,7 +475,7 @@ def vanDANA_solver(args):
 
 					vort, psi = flow.calc_vorticity_streamfunction(uv, bcs['streamfunction'])
 
-					write_solution_files(restart, problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)
+					write_solution_files(problem_physics, result_folder.bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables)
 
 					# Write restart files    
 					write_restart_files(result_folder.folder, Mpi, text_file_handles[2], t, tsp, **restart_write_variables)

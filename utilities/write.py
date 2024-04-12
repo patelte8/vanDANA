@@ -201,7 +201,7 @@ def write_restart_files(directory, Mpi, file_handle, t, tsp, **restart_variables
 
 
 
-def write_solution_files(restart, problem_physics, bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables):
+def write_solution_files(problem_physics, bool_stream, t, xdmf_file_handles, hdf5_file_handles, **variables):
 
 	for key, value in variables.items():
 		if key == 'flow':
