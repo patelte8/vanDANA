@@ -1,6 +1,7 @@
 from dolfin import DirichletBC, Constant, assign, Expression, interpolate, SubDomain, \
 					MeshFunction, sqrt, DOLFIN_EPS, near
-from .user_parameters import problem_physics				
+from .user_parameters import problem_physics
+from .problem_specific import *				
 
 class PeriodicDomain(SubDomain):
 
@@ -19,15 +20,12 @@ class RegionOfInterest(SubDomain):
         tol = 1e-6
         return sqrt(((x[0] - 2.0)*(x[0] - 2.0)) + ((x[1] - 2.0)*(x[1] - 2.0))) < 0.5 + tol
 
-
-parabolic_profile = Expression('6.0*x[1]*(4.1 - x[1])/(4.1*4.1)', degree=2)
-
 class Point_pressure(SubDomain):
     def inside(self, x, on_boundary):
         return near(x[0], 4.2) and near(x[1], 5.) and near(x[2], 2.)
 
 # Boundary conditions
-def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
+def fluid_create_boundary_conditions(fluid_mesh, **V):
 
 	boundaries = fluid_mesh.get_mesh_boundaries()
 
@@ -65,7 +63,7 @@ def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
 	return bcs
 
 
-def solid_create_boundary_conditions(solid_mesh, boundaries, compressible_solid, dt, **V):
+def solid_create_boundary_conditions(solid_mesh, boundaries, dt, **V):
 
 	cylinder = 0; Complement_cylinder = 1         
 	mesh_part = MeshFunction("size_t", solid_mesh.mesh, 0, Complement_cylinder)     
@@ -75,9 +73,9 @@ def solid_create_boundary_conditions(solid_mesh, boundaries, compressible_solid,
 	# Note to self: Boundary conditions are for incremental displacement (delta D)
 
 	# Solid
-	if compressible_solid == False:
+	if problem_physics['compressible_solid'] == False:
 		bcx_cylinder = DirichletBC(V['solid'][1].sub(0), Constant((0, 0)), subdomainR) #, method="pointwise")
-	elif compressible_solid == True:
+	elif problem_physics['compressible_solid'] == True:
 	    bcx_cylinder = DirichletBC(V['solid'][0], Constant((0, 0)), subdomainR) #, method="pointwise")
 
 	bcx = [bcx_cylinder]  

@@ -1,17 +1,16 @@
 from dolfin import DirichletBC, Constant, assign, Expression, interpolate, SubDomain, \
 					MeshFunction, sqrt, DOLFIN_EPS, near
-from .user_parameters import problem_physics				
+from .user_parameters import problem_physics
+from .problem_specific import *				
 
 constrained_domain = None
-
-inflow_profile = Expression('1.5*x[1]*(2 - x[1])*sin(2*3.14159265*t/10)', t=0, degree=2)
 
 class Point_pressure(SubDomain):
     def inside(self, x, on_boundary):
         return near(x[0], 4.2) and near(x[1], 5.) and near(x[2], 2.)
 
 # Boundary conditions
-def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
+def fluid_create_boundary_conditions(fluid_mesh, **V):
 
 	boundaries = fluid_mesh.get_mesh_boundaries()
 
@@ -48,15 +47,15 @@ def fluid_create_boundary_conditions(fluid_mesh, inflow, **V):
 	return bcs
 
 
-def solid_create_boundary_conditions(solid_mesh, boundaries, compressible_solid, dt, **V):
+def solid_create_boundary_conditions(solid_mesh, boundaries, dt, **V):
 
 
 	# Note to self: Boundary conditions are for incremental displacement (delta D)
 
 	# Solid
-	if compressible_solid == False:
+	if problem_physics['compressible_solid'] == False:
 		bcx_bottom = DirichletBC(V['solid'][1].sub(0), Constant((0, 0)), boundaries, 1)
-	elif compressible_solid == True:
+	elif problem_physics['compressible_solid'] == True:
 	    bcx_bottom = DirichletBC(V['solid'][0], Constant((0, 0)), boundaries, 1)
 
 	bcx = [bcx_bottom]  

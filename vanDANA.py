@@ -167,15 +167,10 @@ def vanDANA_solver(args):
 	        solid_create_initial_conditions(Dp_, mix, dt)
 
 	# Boundary conditions
-	# cpp_code = compile_cpp_code(code)
-	# RSPV_x = RIPV_x = LSPV_x = LIPV_x = CompiledExpression(cpp_code.Inflow_x(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
-	# RSPV_y = RIPV_y = LSPV_y = LIPV_y = CompiledExpression(cpp_code.Inflow_y(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
-	# RSPV_z = RIPV_z = LSPV_z = LIPV_z = CompiledExpression(cpp_code.Inflow_z(0, MeshFunction('size_t', fluid_mesh.mesh, 0)), degree = 2)
-	inflow = [] #dict(x=[LSPV_x, LIPV_x, RSPV_x, RIPV_x], y=[LSPV_y, LIPV_y, RSPV_y, RIPV_y], z=[LSPV_z, LIPV_z, RSPV_z, RIPV_z])	
-	bcs = fluid_create_boundary_conditions(fluid_mesh, inflow, **FS)
+	bcs = fluid_create_boundary_conditions(fluid_mesh, **FS)
 
 	if problem_physics['solve_FSI'] == True:
-	    bcs.update(solid = solid_create_boundary_conditions(solid_mesh, boundaries, problem_physics['compressible_solid'], dt, **FS))
+	    bcs.update(solid = solid_create_boundary_conditions(solid_mesh, boundaries, dt, **FS))
 
 	# ---------------------------------------------------------------------------------    
 
@@ -316,13 +311,8 @@ def vanDANA_solver(args):
 				if problem_physics['solve_FSI'] == True:
 					fsi_interpolation.create_bounding_box(solid_mesh.mesh)
 
-				# ---------------------------------------------------------------------------------
-
 				# Update boundary conditions : only if time-dependent
-				# parabolic_profile.t = t; tim.t = t; num_cycle.cycle = int(t / t_period)     
-				# for ui, value in inflow.items():     
-				   #  inflow[ui][0].v = evaluate_boundary_val(param_LSPV); inflow[ui][1].v = evaluate_boundary_val(param_LIPV)
-				   #  inflow[ui][2].v = evaluate_boundary_val(param_RSPV); inflow[ui][3].v = evaluate_boundary_val(param_RIPV)
+				time_varying_bc(t)     
 
 				# ---------------------------------------------------------------------------------   
 
