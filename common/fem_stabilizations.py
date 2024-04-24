@@ -7,7 +7,7 @@ def tau(alpha, vel, h, Num, dt):
 
     vnorm = dot(vel, vel)
     quant = Num*h*h 
-    tau = alpha/sqrt((4.0/(dt*dt)) + (4*((vnorm)/(h*h))) + (144.0/(quant*quant)))
+    tau = alpha/sqrt((4*((vnorm)/(h*h))) + (144.0/(quant*quant)))   # alpha/sqrt((4.0/(dt*dt)) + (4*((vnorm)/(h*h))) + (144.0/(quant*quant)))
     return tau
 
 def Pop(u, w):
