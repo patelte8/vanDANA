@@ -1,7 +1,12 @@
 from dolfin import *
 from mshr import *
+import numpy as np
 
 mesh1 = BoxMesh(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0), 50, 50, 50) 
+
+x = mesh1.coordinates()
+x[:, :2] = (x[:, :2] - 0.5) * 2
+x[:, :2] = 0.5 * (np.cos(pi * (x[:, :2] - 1.) / 2.) + 1.)
 
 class Left(SubDomain):
     def inside(self, x, on_boundary):
