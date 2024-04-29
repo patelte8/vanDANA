@@ -6,8 +6,6 @@ import sys, os, cppimport
 sys.path.insert(0,  '..')
 from utilities.read import read_boundary_conditions
 
-directory = os.path.dirname(os.path.abspath(__file__)) + '/'
-
 Lsc = characteristic_scales['Lsc']
 Vsc = characteristic_scales['Vsc']
 Tsc = Lsc/Vsc

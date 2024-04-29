@@ -126,7 +126,7 @@ def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, nw, S
 
 # Enter "True" if you want to post-process data
 # ---------------------------------------------------------------------
-post_process = True
+post_process = False
 
 # File printing / solid-remeshing control
 # ---------------------------------------------------------------------
