@@ -15,8 +15,8 @@ From: quay.io/fenicsproject/dev:latest
     # Install fenics
     apt-get update
     
-    apt-get -y install python-pip
-    apt-get -y install python3.5
+    apt-get -y install python-pip python3-pip
+    apt-get -y install python3.6
     apt-get -y install virtualenv
     apt-get -y install wget
     apt-get -y install libyaml-dev
@@ -32,15 +32,27 @@ From: quay.io/fenicsproject/dev:latest
     apt-get -y install libboost-all-dev
     apt-get -y install flex
     apt-get -y install git
+    apt-get -y install g++
     apt-get -y install gnuplot
     apt-get -y install python3-h5py 
     apt-get -y install python-future python-numpy python-scipy python-matplotlib; apt-get clean 
+
+
+    apt-get -y install libglu1 libfontconfig1 libxrender1 libxcursor-dev libxft2 libxinerama1 libexpat1 libsm6 libxext-dev libhdf5-serial-dev netcdf-bin libnetcdf-dev
+
+##################### INSTALL MESHIO   ###################################################################################
+
+    pip install --upgrade pip
+    pip install -U setuptools pip
+
+    pip3 install meshio[all]
+
+##################### INSTALL CUDA   ###################################################################################	
+
+    pip install cupy-cuda90 --no-cache-dir	 
+
     
 ##################### INSTALL GMSH   ###################################################################################
-
-    apt-get -y install libglu1
-    apt-get -y install libfontconfig1 libxrender1 libxcursor-dev libxft2 libxinerama1 libexpat1 libsm6 libxext
-    
 
     wget http://gmsh.info/bin/Linux/gmsh-4.8.4-Linux64.tgz \
         && tar xf gmsh-4.8.4-Linux64.tgz \
@@ -50,7 +62,7 @@ From: quay.io/fenicsproject/dev:latest
 
     python3 -m pip --no-cache-dir install cppimport pyvtk scitools3
 		
-##################### INSTALLING FENICSCHTOOLS #########################################################################
+##################### INSTALLING FENICSTOOLS #########################################################################
     wget https://github.com/mikaem/fenicstools/archive/2019.1.tar.gz \
         && tar xf 2019.1.tar.gz \
         && cd fenicstools-2019.1 \
@@ -94,7 +106,7 @@ From: quay.io/fenicsproject/dev:latest
 
 
 %runscript
-    echo "Welcome to the Fenics!"
+    echo "Welcome to Legacy-Fenics 2019.2.0_dev !"
 
     # Disable annoying sudo message
     touch ~/.sudo_as_admin_successful
