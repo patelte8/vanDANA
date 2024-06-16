@@ -2,7 +2,7 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import t_solver
+from .solver_options import *
 from .constitutive_eq import *
 from .fem_stabilizations import *
 import sys
@@ -64,6 +64,13 @@ class Fluid_temperature_problem:
 
 		# --------------------------------
 
+		# Define energy_conservation_solver
+		self.t_solver = PETScKrylovSolver(energy_conservation_solver['solver_type'], PETScPreconditioner(energy_conservation_solver['preconditioner_type']))
+		self.t_solver.parameters.update(krylov_solvers)
+
+		# --------------------------------
+
+		
 	def pre_assemble(self, dt):
 
 		Tp = self.Tp; ttf = self.ttf
@@ -156,7 +163,7 @@ class Fluid_temperature_problem:
 	def solve_temperature(self, A, x, b, bcs):
 	    
 	    [bc.apply(A, b) for bc in bcs]
-	    t_solver.solve(A, x.vector(), b)
+	    self.t_solver.solve(A, x.vector(), b)
 	    # solve(A, x.vector(), b, 'mumps')    		
 
 

@@ -2,7 +2,7 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import u_solver, p_solver, u_solver_c
+from .solver_options import *
 from .constitutive_eq import *
 from .fem_stabilizations import *
 import numpy as np
@@ -115,6 +115,23 @@ class Fluid_problem:
 		self.Cij = dot(dot(self.u_ab, nabla_grad(self.u1)), self.v)*self.dx
 
 		# --------------------------------
+
+		# Define tentative_velocity_solver
+		self.u_solver = PETScKrylovSolver(tentative_velocity_solver['solver_type'], PETScPreconditioner(tentative_velocity_solver['preconditioner_type']))
+		self.u_solver.parameters.update(krylov_solvers)
+
+		# Define pressure_correction_solver
+		self.p_solver = PETScKrylovSolver(pressure_correction_solver['solver_type'], PETScPreconditioner(pressure_correction_solver['preconditioner_type']))
+		self.p_solver.parameters.update(krylov_solvers)
+		self.p_solver.set_reuse_preconditioner(True)
+
+		# Define velocity_correction_solver
+		self.u_solver_c = PETScKrylovSolver(velocity_correction_solver['solver_type'], PETScPreconditioner(velocity_correction_solver['preconditioner_type']))
+		self.u_solver_c.parameters.update(krylov_solvers)
+		self.u_solver_c.set_reuse_preconditioner(True)
+
+		# --------------------------------
+
 
 	def pre_assemble(self, px, bcs, dt):
 
@@ -229,7 +246,7 @@ class Fluid_problem:
 	    
 		for ui in range(self.u_components):
 			[bc.apply(A, b[ui]) for bc in bcs[ui]]
-			u_solver.solve(A, x[ui].vector(), b[ui])
+			self.u_solver.solve(A, x[ui].vector(), b[ui])
 			# solve(A, x[ui].vector(), b[ui], 'mumps')
 
 
@@ -257,7 +274,7 @@ class Fluid_problem:
 		[bc.apply(b) for bc in bcs]
 		if bcs == []:
 		    self.null_space.orthogonalize(b)
-		p_solver.solve(A, x.vector(), b)
+		self.p_solver.solve(A, x.vector(), b)
 		if bcs == []:
 			normalize(x.vector())
 
@@ -279,7 +296,7 @@ class Fluid_problem:
 		A = self.A3
 		for ui in range(self.u_components):
 			[bc.apply(A, b[ui]) for bc in bcs[ui]]
-			u_solver_c.solve(A, x[ui].vector(), b[ui])
+			self.u_solver_c.solve(A, x[ui].vector(), b[ui])
 
 
 	

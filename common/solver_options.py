@@ -1,4 +1,3 @@
-from dolfin import PETScPreconditioner, PETScKrylovSolver, PETScOptions
 from user_inputs import *
 
 # Form compiler parameters
@@ -31,6 +30,12 @@ energy_conservation_solver=dict(
     preconditioner_type='jacobi')
 
 
+pressure_velocity_coupling = "IPCS"                 # options: 1. Chorin 2. IPCS
+piso_iterations = 2                                 # no. of PISO iterations
+piso_tol = 1e-3                                     # tolerance for PISO loop
+
+# -----------------------------------------------------------------------------------------
+
 custom_newtons_solver = True
 line_search_solver = False
 
@@ -45,31 +50,6 @@ if custom_newtons_solver == True:
     solid_momentum_solver.update(solver_type='bcgs')
 
 # -----------------------------------------------------------------------------------------
-
-piso_iterations = 2                         # no. of PISO iterations
-
-# Define tentative_velocity_solver
-precond = PETScPreconditioner(tentative_velocity_solver['preconditioner_type'])
-u_solver = PETScKrylovSolver(tentative_velocity_solver['solver_type'], precond)
-u_solver.parameters.update(krylov_solvers)
-
-# Define pressure_correction_solver
-precond = PETScPreconditioner(pressure_correction_solver['preconditioner_type'])
-p_solver = PETScKrylovSolver(pressure_correction_solver['solver_type'], precond)
-p_solver.parameters.update(krylov_solvers)
-p_solver.set_reuse_preconditioner(True)
-
-# Define velocity_correction_solver
-precond = PETScPreconditioner(velocity_correction_solver['preconditioner_type'])
-u_solver_c = PETScKrylovSolver(velocity_correction_solver['solver_type'], precond)
-u_solver_c.parameters.update(krylov_solvers)
-u_solver_c.set_reuse_preconditioner(True)
-
-# Define energy_conservation_solver
-precond = PETScPreconditioner(energy_conservation_solver['preconditioner_type'])
-t_solver = PETScKrylovSolver(energy_conservation_solver['solver_type'], precond)
-t_solver.parameters.update(krylov_solvers)
-
 
 solid_displacement_parameters = {"newton_solver":{"linear_solver":solid_momentum_solver['solver_type'], "preconditioner":'hypre_amg', "report":True, \
                                                   "error_on_nonconvergence":True, "absolute_tolerance":1e-15, "relative_tolerance":1e-6, "maximum_iterations":20}}

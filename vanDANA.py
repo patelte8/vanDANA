@@ -194,8 +194,6 @@ def vanDANA_solver(args):
 	# Time
 	t = 0
 
-	piso_tol = 1e-3											# tolerance for PISO loop
-	piso_iter = piso_iterations								# no. of PISO iterations
 	recovering = False; no_consecutive_recovers = 0 		# recovery variables
 	counters = create_counters(5)   						# enter number of counters required
 
@@ -334,7 +332,7 @@ def vanDANA_solver(args):
 
 				# PISO inner loop
 				p_inner.assign(p_[1]); u_diff = 1e8
-				while inner_iter < piso_iter:
+				while inner_iter < piso_iterations:
 					if u_diff > -1.0: # piso_tol:
 
 						inner_iter += 1; u_diff = 0.0

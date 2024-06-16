@@ -2,8 +2,7 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import solid_displacement_parameters, snes_solver_parameters, line_search_solver, FFC_parameters, \
-							solid_displacement_custom_solver_parameters, solid_momentum_solver, custom_newtons_solver
+from .solver_options import *
 from .constitutive_eq import *
 import sys
 
