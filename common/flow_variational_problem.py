@@ -2,7 +2,6 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import *
 from .constitutive_eq import *
 from .fem_stabilizations import *
 import numpy as np
@@ -173,7 +172,7 @@ class Fluid_problem:
 	
 		for ui in range(self.u_components):			
 			U = 0.5*(u_1[ui] + u_2[ui])	
-			self.residual[ui] = (u_1[ui] - u_2[ui])/dt + dot(u_ab, nabla_grad(U)) + p_.dx(ui) - nabla_div((2/self.Re)*nabla_grad(U)) - f[ui] - Lm_f[ui]
+			self.residual[ui] = (u_1[ui] - u_2[ui])/dt + dot(u_ab, nabla_grad(U)) + self.pvc_factor*p_.dx(ui) - nabla_div((2/self.Re)*nabla_grad(U)) - f[ui] - Lm_f[ui]
 
 
 	def assemble_tentative_velocity(self, u_, p_, Lm_f, dt):

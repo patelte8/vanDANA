@@ -2,7 +2,6 @@ from dolfin import *
 from ufl import tensors, nabla_div
 from .functions import *
 from fenicstools import interpolate_nonmatching_mesh
-from .solver_options import *
 from .constitutive_eq import *
 from .fem_stabilizations import *
 import sys

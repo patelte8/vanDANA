@@ -132,7 +132,7 @@ post_process = False
 # ---------------------------------------------------------------------
 print_control = dict(
 
-		a = 50,   								# for printing variables and restart files
+		a = 20,   								# for printing variables and restart files
 		b = 20,  								# for post processing quantities - text files
 		c = 20, 								# for simulation_wall_time text file
 		d = 100000000,   						# for remeshing solid current-configuration mesh		
