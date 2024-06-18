@@ -4,13 +4,9 @@ from user_inputs import *
 FFC_parameters = {"representation": 'uflacs', "optimize": True, "cpp_optimize": True, "quadrature_degree": 5, "cpp_optimize_flags": "-O3"}
 
 # Solver parameters
-krylov_solvers=dict(
-    monitor_convergence=False,
-    report=False,
-    error_on_nonconvergence=True,
-    nonzero_initial_guess=True,
-    maximum_iterations=300,
-    absolute_tolerance=1e-8)
+krylov_solvers=dict(monitor_convergence=False, report=False, error_on_nonconvergence=True, nonzero_initial_guess=True, maximum_iterations=300, absolute_tolerance=1e-8)
+
+# -----------------------------------------------------------------------------------------
 
 # Solver dictionaries
 tentative_velocity_solver=dict(
@@ -58,8 +54,7 @@ solid_displacement_parameters = {"newton_solver":{"linear_solver":solid_momentum
 solid_displacement_custom_solver_parameters = {"absolute_tolerance":1e-15, "relative_tolerance":1e-6, "convergence_criterion":'residual', \
                                                "maximum_iterations":20, "report":True, "error_on_nonconvergence":True} #, "relaxation_parameter":1.0}
 
-snes_solver_parameters = {"nonlinear_solver": "snes",
-                          "symmetric": True,
+snes_solver_parameters = {"nonlinear_solver": "snes", "symmetric": True,
                           "snes_solver": {"maximum_iterations": 10,
                                           "report": True,
                                           "line_search": "bt",

@@ -57,6 +57,10 @@ class Fluid_problem:
 		self.u_inner = as_vector([Function(V) for ui in range(self.u_components)])
 		self.p_inner = Function(Q)
 
+		self.p_x = Function(Q)
+		self.pvc_factor = 0.0
+		if pressure_velocity_coupling == "IPCS":	self.pvc_factor = 1.0
+
 		uv   = Function(Vp)		
 		Lm_f = Function(Z1)
 		Lm_f.vector().zero()
@@ -233,7 +237,7 @@ class Fluid_problem:
 
 	    b = self.matrix['Bij'][ui].copy()
 	    b.axpy(1.0, X1*u[ui].vector())
-	    b.axpy(1.0, self.matrix['Sij'][ui]*p.vector())
+	    b.axpy(self.pvc_factor, self.matrix['Sij'][ui]*p.vector())
 
 	    return b
 	
@@ -265,7 +269,7 @@ class Fluid_problem:
 			L2 -= tau(alpha, u_, h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
 		
 		b2 = assemble(L2, tensor=b2)
-		b2.axpy(1.0, self.A2*p_.vector())
+		b2.axpy(self.pvc_factor, self.A2*p_.vector())
 		return b2
 
 	def solve_pressure_correction(self, x, b, bcs):
@@ -285,9 +289,12 @@ class Fluid_problem:
   
 		b3 = [None]*self.u_components
 
+		self.p_x.vector().zero()
+		self.p_x.vector().axpy(self.pvc_factor, p_1.vector())
+
 		for ui in range(self.u_components):
 			b3[ui] = self.matrix['Mij']*u_[ui].vector()
-			b3[ui].axpy(-float(dt), self.matrix['Pij'][ui]*(p_0.vector() - p_1.vector())) 
+			b3[ui].axpy(-float(dt), self.matrix['Pij'][ui]*(p_0.vector() - self.p_x.vector())) 
 
 		return b3
 
