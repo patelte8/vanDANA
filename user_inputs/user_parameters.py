@@ -35,12 +35,12 @@ interpolation_fx = 'phi4'
 stabilization_parameters = dict(	
 
 		# Navier-stokes
-		SUPG_NS = False,						# explicit
-		PSPG_NS = False,						# explicit		
+		SUPG_NS = False,						# implicit
+		PSPG_NS = False,						# implicit		
 		crosswind_NS = False,					# implicit
 
 		# Energy-equation
-		SUPG_HT = False,						# explicit
+		SUPG_HT = False,						# implicit
 		crosswind_HT = False					# implicit
 	)
 

@@ -30,7 +30,7 @@ energy_conservation_solver=dict(
     preconditioner_type='jacobi')
 
 
-pressure_velocity_coupling = "IPCS"                 # options: 1. Chorin 2. IPCS
+pressure_velocity_coupling = "Chorin"                 # options: 1. Chorin 2. IPCS
 piso_iterations = 2                                 # no. of PISO iterations
 piso_tol = 1e-3                                     # tolerance for PISO loop
 

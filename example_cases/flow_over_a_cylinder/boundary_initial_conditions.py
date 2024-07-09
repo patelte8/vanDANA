@@ -12,16 +12,12 @@ def fluid_create_boundary_conditions(fluid_mesh, **V):
 
 	# velocity
 	bcu_left_x = DirichletBC(V['fluid'][0], Constant(1), boundaries, 1)
-	bcu_bottom_x = DirichletBC(V['fluid'][0], Constant(1), boundaries, 2)
-	bcu_top_x = DirichletBC(V['fluid'][0], Constant(1), boundaries, 4)
 	bcu_cylinder_x = DirichletBC(V['fluid'][0], Constant(0), boundaries, 5)
-	bcu_x = [bcu_left_x, bcu_bottom_x, bcu_top_x, bcu_cylinder_x]
+	bcu_x = [bcu_left_x, bcu_cylinder_x]
 
 	bcu_left_y = DirichletBC(V['fluid'][0], Constant(0), boundaries, 1)
-	bcu_bottom_y = DirichletBC(V['fluid'][0], Constant(0), boundaries, 2)
-	bcu_top_y = DirichletBC(V['fluid'][0], Constant(0), boundaries, 4)
 	bcu_cylinder_y = DirichletBC(V['fluid'][0], Constant(0), boundaries, 5)
-	bcu_y = [bcu_left_y, bcu_bottom_y, bcu_top_y, bcu_cylinder_y]
+	bcu_y = [bcu_left_y, bcu_cylinder_y]
 
 	bcu = [bcu_x, bcu_y]
 

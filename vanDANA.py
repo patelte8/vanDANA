@@ -188,7 +188,7 @@ def vanDANA_solver(args):
 	# ---------------------------------------------------------------------------------        
 	        
 	# Pre-assemble matrices
-	flow.pre_assemble(p_[0], bcs, dt)
+	flow.pre_assemble(bcs, dt)
 	flow_temp.pre_assemble(dt)
 
 	# Time
@@ -341,8 +341,8 @@ def vanDANA_solver(args):
 								
 						timer_s2.start()
 						# print(BLUE % "2: Pressure correction step", flush = True)
-						b2 = flow.assemble_pressure_correction(u_[0], p_inner, dt)
-						flow.solve_pressure_correction(p_[0], b2, bcs['pressure'])
+						A2, b2 = flow.assemble_pressure_correction(u_, p_inner, Lm_f, dt)
+						flow.solve_pressure_correction(A2, p_[0], b2, bcs['pressure'])
 						s2 += timer_s2.stop()
 
 						timer_s3.start()
@@ -371,6 +371,7 @@ def vanDANA_solver(args):
 				if problem_physics['solve_temperature'] == True:
 				    A4, b4 = flow_temp.assemble_temperature(T_, uv, LmTf_, dt)
 				    flow_temp.solve_temperature(A4, T_[0], b4, bcs['temperature'])
+				    print("Temperature bounds : Max = {:.3f} , Min = {:.3f}".format(Mpi.Max(T_[0].vector().max()), Mpi.Min(T_[0].vector().min())), flush = True)
 				s4 += timer_s4.stop()	    
 
 				# --------------------------------------------------------------------------------- 

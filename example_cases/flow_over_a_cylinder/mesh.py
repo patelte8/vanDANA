@@ -5,7 +5,7 @@ from mshr import *
 Rectangle = Rectangle(Point(-10.0, -15.0), Point(35.0, 15.0))
 circle = Circle(Point(0.0, 0.0), 0.5)
 domain = Rectangle - circle
-mesh1 = generate_mesh(domain, 380)
+mesh1 = generate_mesh(domain, 500)
 
 class Left(SubDomain):
     def inside(self, x, on_boundary):

@@ -35,12 +35,12 @@ interpolation_fx = 'phi4'
 stabilization_parameters = dict(	
 
 		# Navier-stokes
-		SUPG_NS = False,						# explicit
-		PSPG_NS = False,						# explicit		
+		SUPG_NS = False,						# implicit
+		PSPG_NS = False,						# implicit		
 		crosswind_NS = False,					# implicit
 
 		# Energy-equation
-		SUPG_HT = True,							# explicit
+		SUPG_HT = True,							# implicit
 		crosswind_HT = False					# implicit
 	)
 
@@ -117,7 +117,7 @@ fem_degree = dict(
 # ---------------------------------------------------------------------
 def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, nw, Spht_s, K_s, Lsc, Vsc, T0, Tm, Tsc):
 
-		Re = 100 #rho_f*(Vsc*Lsc)/nu            
+		Re = 500 #rho_f*(Vsc*Lsc)/nu            
 		Pr = 100 #(Spht_f*nu)/K_f 
 		Ec = 0.4 #(Vsc*Vsc)/(Spht_f*(Tm-T0))
 		Fr = Vsc/sqrt(g*Lsc) 

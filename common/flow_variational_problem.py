@@ -86,13 +86,14 @@ class Fluid_problem:
 		self.A2 = None
 		self.A3 = None
 		self.null_space = VectorSpaceBasis([])
-		self.residual = [Function(V) for ui in range(self.u_components)]
+		self.rs = []
+		self.residual = Function(V)
 		self.matrix = dict(Mij=None, Kij = None, Cij = None, \
 						   Sij = [None for ui in range(self.u_components)], \
 						   Bij = [None for ui in range(self.u_components)], \
 						   Pij = [None for ui in range(self.u_components)], \
 						   Yij = [None for ui in range(self.u_components)], \
-						   b1_Ls1 = None, A1_SCW1 = None, b2 = None)
+						   A1_as1 = None, A2_as2 = None, b1_Ls1 = None, A1_SCW1 = None, b2 = None)
 		
 		self.f = f
 		self.dim = dim
@@ -136,7 +137,7 @@ class Fluid_problem:
 		# --------------------------------
 
 
-	def pre_assemble(self, px, bcs, dt):
+	def pre_assemble(self, bcs, dt):
 
 		d = self.matrix; Re = self.Re; dim = self.dim
 		u1 = self.u1; v = self.v; p = self.p; q = self.q
@@ -159,28 +160,22 @@ class Fluid_problem:
 			self.A1.axpy(1.0/float(dt), self.matrix['Mij'], True)
 	    	
 		self.A2 = assemble(dot(nabla_grad(p), nabla_grad(q))*dx)
-		if bcs['pressure'] == []:
-		    self.null_space = attach_nullspace(self.A2, px, self.F[1])    
-
-		# Boundary conditions
-		[bc.apply(self.A2) for bc in bcs['pressure']]	
 
 
 
-	# Predict tentative velocity 	
-	def residual_tentative_velocity(self, u_1, u_2, u_ab, p_, Lm_f, f, dt):
-	
-		for ui in range(self.u_components):			
-			U = 0.5*(u_1[ui] + u_2[ui])	
-			self.residual[ui] = (u_1[ui] - u_2[ui])/dt + dot(u_ab, nabla_grad(U)) + self.pvc_factor*p_.dx(ui) - nabla_div((2/self.Re)*nabla_grad(U)) - f[ui] - Lm_f[ui]
+
+	def residual_NS_equation(self, ui, u1, u2, u_ab, p_, Lm_f, f, dt):
+			
+		U = 0.5*(u1 + u2)	
+		self.residual = (u1 - u2)/dt + dot(u_ab, nabla_grad(U)) + p_.dx(ui) - nabla_div((2/self.Re)*nabla_grad(U)) - f[ui] - Lm_f[ui]
 
 
+	# Predict tentative velocity
 	def assemble_tentative_velocity(self, u_, p_, Lm_f, dt):
 
 		d = self.matrix; Re = self.Re; f = self.f
-		u1 = self.u1; v = self.v; dx = self.dx
-		u_ab = self.u_ab; residual = self.residual
-		h_f = self.h_f; dx = self.dx; ds = self.ds
+		u1 = self.u1; v = self.v; u_ab = self.u_ab
+		dx = self.dx; ds = self.ds; h_f = self.h_f
 
 		if time_control['adjustable_timestep'] == False:
 			A1 = self.A1.copy()
@@ -207,20 +202,26 @@ class Fluid_problem:
 		if problem_physics['solve_FSI'] == True:
 			for ui in range(self.u_components):
 				b1[ui].axpy(1.0, d['Yij'][ui]*Lm_f.sub(ui).vector())
-	
-		# Residual vector
-		Fluid_problem.residual_tentative_velocity(self, u_[1], u_[2], u_ab, p_[1], Lm_f, f, dt)
-		
+
 		# Stabilization terms	
 		if stabilization_parameters['SUPG_NS'] == True:
-			tau_supg = tau(alpha, u_[1], h_f, Re, dt); operator_supg = Pop(u_[1], v)
+			tau_supg = tau(alpha, u_[1], h_f, Re, dt); operator_supg = Pop(u_ab, v)
 			for ui in range(self.u_components):
-				d['b1_Ls1'] = assemble(tau_supg*dot(operator_supg, residual[ui])*dx, tensor=d['b1_Ls1'])
-				b1[ui].axpy(-1.0, d['b1_Ls1'])
+				Fluid_problem.residual_NS_equation(self, ui, u1, u_[1][ui], u_ab, p_[1], Lm_f, f, dt)
+				S1 = tau_supg*dot(operator_supg, self.residual)*dx
+				if ui == 0:
+					d['A1_as1'] = assemble(lhs(S1), tensor=d['A1_as1'])
+					A1.axpy(1.0, d['A1_as1'], True)
+				d['b1_Ls1'] = assemble(rhs(S1), tensor=d['b1_Ls1'])
+				b1[ui].axpy(1.0, d['b1_Ls1'])
 
 		if stabilization_parameters['crosswind_NS'] == True:
-			R = as_vector([self.residual[ui] for ui in range(self.u_components)])
-			d['A1_SCW1'] = assemble(inner(tau_cw(C_cw, u_[1], h_f, Re, R)*Pop_CW(u_[1], u1), nabla_grad(v))*dx, tensor=d['A1_SCW1'])
+			self.rs.clear()
+			for ui in range(self.u_components):
+				Fluid_problem.residual_NS_equation(self, ui, u_[1][ui], u_[2][ui], u_ab, p_[1], Lm_f, f, dt)
+				self.rs.append(self.residual)
+			R = as_vector(self.rs)
+			d['A1_SCW1'] = assemble(inner(tau_cw(C_cw, u_[1], h_f, Re, R)*Pop_CW(u_ab, u1), nabla_grad(v))*dx, tensor=d['A1_SCW1'])
 			A1.axpy(1.0, d['A1_SCW1'], True)
 
 		return A1, b1	        
@@ -256,25 +257,34 @@ class Fluid_problem:
 
 
 	# Pressure correction
-	def assemble_pressure_correction(self, u_, p_, dt):
+	def assemble_pressure_correction(self, u_, p_, Lm_f, dt):
 
-		p = self.p; q = self.q; dx = self.dx 
-		h_f = self.h_f; Re = self.Re; b2 = self.matrix['b2']
+		A = self.A2; p = self.p; q = self.q; dx = self.dx; f = self.f
+		h_f = self.h_f; u_ab = self.u_ab; Re = self.Re; d = self.matrix
 	
-		L2 = (-1/dt)*divergence(u_, self.u_components)*q*dx
+		L2 = (-1/dt)*divergence(u_[0], self.u_components)*q*dx
 		
 		if stabilization_parameters['PSPG_NS'] == True:
-			R = as_vector([self.residual[ui] for ui in range(self.u_components)])
-			L2 -= tau(alpha, u_, h_f, Re, dt)*dot(R, nabla_grad(q))*dx	
+			tau_pspg = tau(alpha, u_[0], self.h_f, Re, dt); operator_pspg = nabla_grad(q); self.rs.clear()
+			for ui in range(self.u_components):
+				Fluid_problem.residual_NS_equation(self, ui, u_[0][ui], u_[1][ui], u_ab, p, Lm_f, f, dt)
+				self.rs.append(self.residual)
+			R = as_vector(self.rs)	
+			S2 = tau_pspg*dot(operator_pspg, R)*dx
+			d['A2_as2'] = assemble(lhs(S2), tensor=d['A2_as2'])
+			A.axpy(1.0, d['A2_as2'], True)
+			L2 += rhs(S2)
 		
-		b2 = assemble(L2, tensor=b2)
-		b2.axpy(self.pvc_factor, self.A2*p_.vector())
-		return b2
+		d['b2'] = assemble(L2, tensor=d['b2'])
+		d['b2'].axpy(self.pvc_factor, self.A2*p_.vector())
 
-	def solve_pressure_correction(self, x, b, bcs):
+		return A, d['b2']
+
+	def solve_pressure_correction(self, A, x, b, bcs):
 	    
-		A = self.A2
-		[bc.apply(b) for bc in bcs]
+		if bcs == []:
+		    self.null_space = attach_nullspace(A, x, self.F[1])
+		[bc.apply(A, b) for bc in bcs]
 		if bcs == []:
 		    self.null_space.orthogonalize(b)
 		self.p_solver.solve(A, x.vector(), b)
