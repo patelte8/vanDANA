@@ -361,6 +361,8 @@ def round_decimals_down(number:float, decimals:int=8):
 def calc_runtime_stats_timestep(Mpi, problem_physics, u, u_components, u_diff, t, tsp, text_file_handles, mesh, hmin_f, h_f_X, Re, Pr, thermal_diff_ratio, VN_local, time_control): 
 
     X = 0.6; Y = 1-X
+
+    dt_grow = True; dt_limiter = {0: 'convection', 1: 'viscosity', 2: 'conduction'}
     tsp_min = time_control['dt_min']*hmin_f
     
     DN, NM = DENO(u, u_components, Mpi, mesh, h_f_X)
@@ -378,31 +380,28 @@ def calc_runtime_stats_timestep(Mpi, problem_physics, u, u_components, u_diff, t
         if problem_physics['solve_temperature']: text_file_handles[1].write(f"{t:0,.8f}        {tsp:0,.8f}        {u_diff:0,.6e}             {local_Re:0,.8f}           {C_no_real:0,.8f}           {C_vi_real:0,.8f}           {C_kn_real:0,.8f}\n")
         if not problem_physics['solve_temperature']: text_file_handles[1].write(f"{t:0,.8f}        {tsp:0,.8f}        {u_diff:0,.6e}             {local_Re:0,.8f}           {C_no_real:0,.8f}           {C_vi_real:0,.8f}           {float('nan')}\n")    
 
-    if tsp > tsp_min and time_control['adjustable_timestep'] == False:
-        print("constant timestep : dt = {}".format(tsp), flush = True) 	
+    if time_control['adjustable_timestep'] == False:
+        dt_grow = False
+        if tsp > tsp_min:
+            print("constant timestep : dt = {}".format(tsp), flush = True) 	
     
-    if tsp > tsp_min and time_control['adjustable_timestep'] == True:
+    if time_control['adjustable_timestep'] == True:
 
         tsp1 = tsp2 = tsp
-        dt_limiter = {0: 'convection', 1: 'viscosity', 2: 'conduction'}
 
         if C_no_real > time_control['C_no']:
+            dt_grow = False
             if C_no_real > 5.0:
                 tsp1 = round_decimals_down((time_control['C_no'])/DN, 5)
             else:
                 tsp1 = round_decimals_down((Y*time_control['C_no'] + X*C_no_real)/DN, 5)
 
-        elif C_no_real < time_control['C_no']:
-            tsp1 = round_decimals_down((X*time_control['C_no'] + Y*C_no_real)/DN, 5)
-
         if C_vi_real > time_control['C_vi']:
+            dt_grow = False
             if C_vi_real > 30.0:
                 tsp2 = round_decimals_down((time_control['C_vi'])/VN, 5)
             else:
                 tsp2 = round_decimals_down((Y*time_control['C_vi'] + X*C_vi_real)/VN, 5)
-
-        elif C_vi_real < time_control['C_vi']:
-            tsp2 = round_decimals_down((X*time_control['C_vi'] + Y*C_vi_real)/VN, 5)
 
         tsp_list = [tsp1, tsp2]
 
@@ -411,24 +410,31 @@ def calc_runtime_stats_timestep(Mpi, problem_physics, u, u_components, u_diff, t
             tsp3 = tsp
 
             if C_kn_real > time_control['C_kn']:
+                dt_grow = False
                 if C_kn_real > min(time_control['C_vi']/Pr, thermal_diff_ratio*time_control['C_vi']/Pr):
                     tsp3 = round_decimals_down((time_control['C_kn'])/KN, 5)
                 else:
-                    tsp3 = round_decimals_down((Y*time_control['C_kn'] + X*C_kn_real)/KN, 5)
-
-            elif C_kn_real < time_control['C_kn']:
-                tsp3 = round_decimals_down((X*time_control['C_kn'] + Y*C_kn_real)/KN, 5)        
+                    tsp3 = round_decimals_down((Y*time_control['C_kn'] + X*C_kn_real)/KN, 5)     
 
             tsp_list.append(tsp3)
 
         tsp = min(tsp_list)
         index_min = np.argmin(tsp_list)
 
-        print("timestep limited by {} CFL : dt = {}".format(dt_limiter[index_min], tsp), flush = True)
+        if tsp > tsp_min: 
+            if dt_grow == False:
+                print("timestep limited by {} CFL : dt = {}".format(dt_limiter[index_min], tsp), flush = True)
+            else:
+                tsp = round_decimals_down(1.1*tsp, 5)
+                print("timestep grow : dt = {}".format(tsp), flush = True)    
 
     if tsp <= tsp_min:
-        tsp = round_decimals_down(tsp_min, 5)
-        print(BLUE % "timestep at dt_min = {}".format(tsp), flush = True)            
+        if dt_grow == True: 
+            tsp = round_decimals_down(1.1*tsp, 5)
+            print("timestep grow : dt = {}".format(tsp), flush = True)
+        else:
+            tsp = round_decimals_down(tsp_min, 5)
+            print(BLUE % "timestep at dt_min = {}".format(tsp), flush = True)                      
 
     return tsp 
 

@@ -89,13 +89,13 @@ def reset_counter(j, *args):
         for i in range(len(j)):
             j[i] = 0    
 
-def update_counter(j, *args):
+def update_counter(j, tsp, *args):
     if args:
          for x in args:
-            j[x] += 1         
+            j[x] += tsp         
     else:
         for i in range(len(j)):
-            j[i] += 1    
+            j[i] += tsp    
 
 
 

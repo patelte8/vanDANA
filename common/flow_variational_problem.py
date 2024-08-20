@@ -57,8 +57,10 @@ class Fluid_problem:
 		self.p_inner = Function(Q)
 
 		self.p_x = Function(Q)
-		self.pvc_factor = 0.0
-		if pressure_velocity_coupling == "IPCS":	self.pvc_factor = 1.0
+		self.pvc_factor = 1.0
+		self.rot_factor = 0.0
+		if pressure_velocity_coupling == "Chorin":	self.pvc_factor = 0.0
+		if pressure_velocity_coupling == "R-IPCS":	self.rot_factor = 1.0
 
 		uv   = Function(Vp)		
 		Lm_f = Function(Z1)
@@ -143,8 +145,8 @@ class Fluid_problem:
 		u1 = self.u1; v = self.v; p = self.p; q = self.q
 		dx = self.dx; ds = self.ds; n = self.n; f = self.f
 		
-		d['Mij'] = self.A3 = assemble(dot(u1, v)*dx, tensor=d['Mij'])	                                     # Mass matrix 
-		d['Kij'] = assemble(dot((0.5/Re)*nabla_grad(u1), nabla_grad(v))*dx, tensor=d['Kij'])      	   				# Viscous matrix
+		d['Mij'] = self.A3 = assemble(dot(u1, v)*dx, tensor=d['Mij'])	                                    # Mass matrix 
+		d['Kij'] = assemble(dot((0.5/Re)*nabla_grad(u1), nabla_grad(v))*dx, tensor=d['Kij'])      	   		# Viscous matrix
 		
 		for ui in range(self.u_components):
 			d['Sij'][ui] = assemble(dot(p, v.dx(ui))*dx - dot(p*n[ui], v)*ds, tensor=d['Sij'][ui])      	# Pressure matrix

@@ -301,7 +301,7 @@ def vanDANA_solver(args):
 				inner_iter = 0
 				
 				if recovering == False:
-				    update_counter(counters)
+				    update_counter(counters, tsp)
 
 				    # Update current time
 				    t += tsp					
@@ -331,11 +331,12 @@ def vanDANA_solver(args):
 				s1 += timer_s1.stop()
 
 				# PISO inner loop
-				p_inner.assign(p_[1]); u_diff = 1e8
+				u_diff = 1e8
 				while inner_iter < piso_iterations:
 					if u_diff > -1.0: # piso_tol:
 
 						inner_iter += 1; u_diff = 0.0
+						p_inner.assign(p_[0])
 						for ui in range(u_components):
 							u_inner[ui].assign(u_[0][ui]) 
 								
@@ -351,11 +352,13 @@ def vanDANA_solver(args):
 						flow.solve_velocity_correction(u_[0], b3, bcs['velocity'])
 						s3 += timer_s3.stop()
 
-						p_inner.assign(p_[0])
 						for ui in range(u_components):
 							u_inner[ui].vector().axpy(-1.0, u_[0][ui].vector())
 							u_diff += u_inner[ui].vector().norm('l2')
-						print("PISO loop {} : velocity error = {:.3e}".format(inner_iter, u_diff), flush = True)
+						if pressure_velocity_coupling == "Chorin":
+							print("velocity error = {:.3e}".format(u_diff), flush = True)
+						else:
+							print("PISO loop {} : velocity error = {:.3e}".format(inner_iter, u_diff), flush = True)
 
 				assigner_uv.assign(uv, [u_[0][ui] for ui in range(u_components)])
 

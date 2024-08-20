@@ -128,15 +128,15 @@ def calc_non_dimensional_numbers(g, rho_f, nu, Spht_f, K_f, rho_s, Sm, Ld, nw, S
 # ---------------------------------------------------------------------
 post_process = False
 
-# File printing / solid-remeshing control
+# File printing / solid-remeshing control (in non-dimensional time)
 # ---------------------------------------------------------------------
 print_control = dict(
 
-		a = 20,   								# for printing variables and restart files
-		b = 20,  								# for post processing quantities - text files
-		c = 20, 								# for simulation_wall_time text file
-		d = 100000000,   						# for remeshing solid current-configuration mesh		
-		e = 2    								# for timestep_courant_no_stats text file	
+		a = 0.25,  								# for printing variables and restart files
+		b = 0.25,  								# for post processing quantities - text files
+		c = 0.5, 								# for simulation_wall_time text file
+		d = 100,		   						# for remeshing solid current-configuration mesh		
+		e = 0.01   								# for timestep_courant_no_stats text file	
 	)
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
