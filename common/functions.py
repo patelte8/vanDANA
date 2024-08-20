@@ -325,8 +325,6 @@ def interpolate_nonmatching_mesh_delta(fsi_interpolation, u0, V, abc, flag):
     return u 
 
 
-# Other miscellaneous functions
-
 # Divergence of a vector
 def divergence(u, u_components):
     
