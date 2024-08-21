@@ -80,14 +80,14 @@ def create_counters(i):
 
     return my_list   
 
-def reset_counter(j, *args):
+def reset_counter(j, g, *args):
 
     if args:
         for x in args:
-            j[x] = 0
+            j[x] = g
     else:
         for i in range(len(j)):
-            j[i] = 0    
+            j[i] = g    
 
 def update_counter(j, tsp, *args):
     if args:

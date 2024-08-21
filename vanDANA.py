@@ -462,7 +462,7 @@ def vanDANA_solver(args):
 				# Print output files
 				if counters[0] >= print_control['a']:
 
-					reset_counter(counters, 0); Mpi.set_barrier()
+					reset_counter(counters, round(t % print_control['a'], 5), 0); Mpi.set_barrier()
 					print(BLUE % "File printing in progress --- Simulation run time : {} , Wall time elapsed : {} sec".format(t, timer_total.elapsed()[0]), flush = True) 
 
 					vort, psi = flow.calc_vorticity_streamfunction(uv, bcs['streamfunction'])
@@ -486,7 +486,7 @@ def vanDANA_solver(args):
 				if post_process == True:
 					if counters[1] >= print_control['b']:
 
-						reset_counter(counters, 1)
+						reset_counter(counters, round(t % print_control['b'], 5), 1)
 						flow.post_process_data(Mpi, uv, p_[0], t, tsp, text_file_handles)
 						if problem_physics['solve_temperature'] == True: 
 							flow_temp.post_process_data(Mpi, T_, t, text_file_handles)
@@ -499,7 +499,7 @@ def vanDANA_solver(args):
 				# If required: calculate new time-step      
 				if counters[4] >= print_control['e']:    
 
-					reset_counter(counters, 4)
+					reset_counter(counters, round(t % print_control['e'], 5), 4)
 					tsp = calc_runtime_stats_timestep(Mpi, problem_physics, u_[0], u_components, u_diff, t, tsp, text_file_handles, fluid_mesh.mesh, hmin_f, flow.h_f_X, Re, Pr, thermal_diff_ratio, flow.VN_local, time_control)
 					dt  = Constant(tsp)         
 
@@ -520,7 +520,7 @@ def vanDANA_solver(args):
 				if problem_physics['solve_FSI'] == True:
 					if counters[3] >= print_control['d']:
 
-						reset_counter(counters, 3)
+						reset_counter(counters, round(t % print_control['d'], 5), 3)
 						print(GREEN % "Remeshing solid current-congifuration mesh", flush = True)
 						solid_mesh.mesh, ratio_min, ratio_max = mesh_smoothening(solid_mesh.mesh)   
 						solid_mesh.mesh.bounding_box_tree().build(solid_mesh.mesh)
@@ -533,7 +533,7 @@ def vanDANA_solver(args):
 				# Timing tasks
 				if counters[2] >= print_control['c']:
 					
-					reset_counter(counters, 2); Mpi.set_barrier() 
+					reset_counter(counters, round(t % print_control['c'], 5), 2); Mpi.set_barrier() 
 					if Mpi.get_rank() == 0:
 						text_file_handles[3].truncate(0); text_file_handles[3].seek(0)
 						text_file_handles[3].write("#Time		#Step_1			#Step_2			#Step_3			#Step_4			#Step_5			#Step_6			#Step_7			#Step_interpolation	#Step_move_mesh		#Step_remeshing\n")
