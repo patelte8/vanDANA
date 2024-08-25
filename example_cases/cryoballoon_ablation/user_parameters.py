@@ -133,7 +133,7 @@ post_process = False
 print_control = dict(
 
 		a = 0.2,   								# for printing variables and restart files
-		b = 50,  								# for post processing quantities - text files
+		b = 0.04,  								# for post processing quantities - text files
 		c = 0.5, 								# for simulation_wall_time text file
 		d = 0.05,   							# for remeshing solid current-configuration mesh		
 		e = 0.01    							# for timestep_courant_no_stats text file	
