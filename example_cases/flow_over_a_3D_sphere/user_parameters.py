@@ -97,7 +97,7 @@ time_control = dict(
 		C_vi = 10,								# Set viscous CFL number (max possible is 30)
 		C_kn = 10,								# Set conduction CFL number (max possible is max(C_vi/Pr, thermal_diff_ratio*C_vi/Pr))
 		dt = 0.005,  							# Time-step: constant throughout runtime if adjustable-timestep is "False"
-		T = 300,								# Total runtime
+		T = 150,								# Total runtime
 		dt_min = 0.02,							# Minimum permissible time step in % of min cell size (recommended - 2%)
 		adjustable_timestep = True 				# Calculate variable time-step using CFL numbers : used to accelerate temporal solution
 	)
