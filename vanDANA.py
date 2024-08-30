@@ -604,8 +604,8 @@ if __name__ == '__main__':
 	parser.add_argument('-adjustable_timestep', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=time_control["adjustable_timestep"])
 	parser.add_argument('-post_process', type=lambda x:bool(strtobool(x)), metavar='', required=False, default=post_process)
 	parser.add_argument('-T', type=float, metavar='', required=False, default=time_control["T"])
-	parser.add_argument('-a', type=int, metavar='', required=False, default=print_control["a"])
-	parser.add_argument('-b', type=int, metavar='', required=False, default=print_control["b"])
+	parser.add_argument('-a', type=float, metavar='', required=False, default=print_control["a"])
+	parser.add_argument('-b', type=float, metavar='', required=False, default=print_control["b"])
 
 	# arguments are stored in "args"
 	args = parser.parse_args()				
