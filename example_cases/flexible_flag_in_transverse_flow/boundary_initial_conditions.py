@@ -49,7 +49,6 @@ def fluid_create_boundary_conditions(fluid_mesh, **V):
 
 def solid_create_boundary_conditions(solid_mesh, boundaries, dt, **V):
 
-
 	# Note to self: Boundary conditions are for incremental displacement (delta D)
 
 	# Solid
