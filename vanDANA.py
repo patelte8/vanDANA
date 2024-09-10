@@ -117,9 +117,9 @@ def vanDANA_solver(args):
 	T = time_control['T']
 	dt = Constant(dt)
 
-	if problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}, Conduction = {}".format(time_control['C_no'], time_control['C_vi'], time_control['C_kn']), flush = True)
-	if not problem_physics['solve_temperature']: print(RED % "\nRuntime CFL limits : Convection = {}, Viscous = {}".format(time_control['C_no'], time_control['C_vi']), flush = True)
-	print(RED % "Flow solver : {}".format(pressure_velocity_coupling), flush=True)
+	print(RED % "\nFlow solver : {}".format(pressure_velocity_coupling), flush=True)
+	if problem_physics['solve_temperature']: print(RED % "Runtime CFL limits : Convection = {}, Viscous = {}, Conduction = {}".format(time_control['C_no'], time_control['C_vi'], time_control['C_kn']), flush = True)
+	if not problem_physics['solve_temperature']: print(RED % "Runtime CFL limits : Convection = {}, Viscous = {}".format(time_control['C_no'], time_control['C_vi']), flush = True)
 	if restart == False: print(RED % "\nInitial time_step = {}".format(tsp), flush = True)
 	                       
 	# Create output folder
