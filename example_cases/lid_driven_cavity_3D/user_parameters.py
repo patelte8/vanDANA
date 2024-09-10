@@ -94,8 +94,8 @@ characteristic_scales = dict(
 time_control = dict(
 
 		C_no = 1,								# Set convection CFL number (recommended - for time accuracy : C_no < 1.0, max possible is 5.0)
-		C_vi = 10,								# Set viscous CFL number (max possible is 30)
-		C_kn = 10,								# Set conduction CFL number (max possible is max(C_vi/Pr, thermal_diff_ratio*C_vi/Pr))
+		C_vi = 6,								# Set viscous CFL number (max possible is 30)
+		C_kn = 6,								# Set conduction CFL number (max possible is max(C_vi/Pr, thermal_diff_ratio*C_vi/Pr))
 		dt = 0.01,  							# Time-step: constant throughout runtime if adjustable-timestep is "False"
 		T = 10,									# Total runtime
 		dt_min = 0.02,							# Minimum permissible time step in % of min cell size (recommended - 2%)
