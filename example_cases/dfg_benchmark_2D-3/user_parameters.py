@@ -132,11 +132,11 @@ post_process = False
 # ---------------------------------------------------------------------
 print_control = dict(
 
-		a = 0.1,   								# for printing variables and restart files
-		b = 0.05,  								# for post processing quantities - text files
-		c = 0.5, 								# for simulation_wall_time text file
-		d = 0.05, 								# for remeshing solid current-configuration mesh		
-		e = 0.01   								# for timestep_courant_no_stats text file	
+		a = 1,   								# for printing variables and restart files
+		b = 0.5,  								# for post processing quantities - text files
+		c = 1,	 								# for simulation_wall_time text file
+		d = 0.5, 								# for remeshing solid current-configuration mesh		
+		e = 0.1   								# for timestep_courant_no_stats text file	
 	)
 
 # If 2D problem?: Do u want to calculate stream function and vorticity! # Note to self: streamfunction is not defined for 3D.
