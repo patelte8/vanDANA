@@ -93,7 +93,7 @@ characteristic_scales = dict(
 # ---------------------------------------------------------------------
 time_control = dict(
 
-		C_no = 1,								# Set convection CFL number (recommended - for time accuracy : C_no < 1.0, max possible is 5.0)
+		C_no = 0.75,								# Set convection CFL number (recommended - for time accuracy : C_no < 1.0, max possible is 5.0)
 		C_vi = 6,								# Set viscous CFL number (max possible is 30)
 		C_kn = 6,								# Set conduction CFL number (max possible is max(C_vi/Pr, thermal_diff_ratio*C_vi/Pr))
 		dt = 0.005,  							# Time-step: constant throughout runtime if adjustable-timestep is "False"
