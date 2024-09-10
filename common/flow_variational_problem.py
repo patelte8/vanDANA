@@ -61,6 +61,7 @@ class Fluid_problem:
 		self.rot_factor = 0.0
 		if pressure_velocity_coupling == "Chorin":	self.pvc_factor = 0.0
 		if pressure_velocity_coupling == "R-IPCS":	self.rot_factor = 1.0
+		self.divu = divergence(u_[0], self.u_components)
 
 		uv   = Function(Vp)		
 		Lm_f = Function(Z1)
@@ -261,10 +262,11 @@ class Fluid_problem:
 	# Pressure correction
 	def assemble_pressure_correction(self, u_, p_, Lm_f, dt):
 
-		A = self.A2; p = self.p; q = self.q; dx = self.dx; f = self.f
-		h_f = self.h_f; u_ab = self.u_ab; Re = self.Re; d = self.matrix
+		A = self.A2; p = self.p; q = self.q; dx = self.dx; divu = self.divu
+		f = self.f; h_f = self.h_f; u_ab = self.u_ab; Re = self.Re; d = self.matrix
 	
-		L2 = (-1/dt)*divergence(u_[0], self.u_components)*q*dx
+		divu = divergence(u_[0], self.u_components)
+		L2 = (-1/dt)*divu*q*dx
 		
 		if stabilization_parameters['PSPG_NS'] == True:
 			tau_pspg = tau(alpha, u_[0], self.h_f, Re, dt); operator_pspg = nabla_grad(q); self.rs.clear()
@@ -279,6 +281,7 @@ class Fluid_problem:
 		
 		d['b2'] = assemble(L2, tensor=d['b2'])
 		d['b2'].axpy(self.pvc_factor, self.A2*p_.vector())
+		d['b2'].axpy(-float(self.rot_factor/Re), assemble(dot(nabla_grad(divu), nabla_grad(q))*dx))
 
 		return A, d['b2']
 
@@ -298,6 +301,7 @@ class Fluid_problem:
 	# Velocity correction	
 	def assemble_velocity_correction(self, u_, p_0, p_1, dt):
   
+		divu = self.divu; Re = self.Re; v = self.v
 		b3 = [None]*self.u_components
 
 		self.p_x.vector().zero()
@@ -306,6 +310,7 @@ class Fluid_problem:
 		for ui in range(self.u_components):
 			b3[ui] = self.matrix['Mij']*u_[ui].vector()
 			b3[ui].axpy(-float(dt), self.matrix['Pij'][ui]*(p_0.vector() - self.p_x.vector())) 
+			b3[ui].axpy(-float(dt*self.rot_factor/Re), assemble(dot(divu.dx(ui), v)*dx))
 
 		return b3
 
