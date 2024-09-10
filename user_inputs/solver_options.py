@@ -35,7 +35,7 @@ piso_iterations = 2                                 # no. of PISO iterations
 piso_tol = 1e-3                                     # tolerance for PISO loop
 
 # Chorin's scheme is non-iterative
-if pressure_velocity_coupling == "Chorin":  piso_iterations = 1           
+if pressure_velocity_coupling == "Chorin":  piso_iterations = 1         # Note : for Chorin's scheme (recommended max. CFL for time accuracy : C_no < 1.0, C_vi < 6.0)
 
 # -----------------------------------------------------------------------------------------
 
