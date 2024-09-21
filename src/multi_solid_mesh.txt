@@ -1,0 +1,1 @@
+If the user wants to define multiple solid objects/meshes, make a combined single mesh (with multiple solid objects) entirely using GMSH in a single .geo file.
